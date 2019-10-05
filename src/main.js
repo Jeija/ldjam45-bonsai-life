@@ -118,13 +118,13 @@ function spawnRandomNutrient(dist, speed, axis, size) {
     .clone()
     .negate()
     .normalize()
-		.multiplyScalar(speed)
-		
-	let newNu = new Nutrient(spawnVec, toCenter, size)
+    .multiplyScalar(speed)
 
-	nutrients.push(newNu)
-	
-	console.log(newNu)
+  let newNu = new Nutrient(spawnVec, toCenter, size)
+
+  nutrients.push(newNu)
+
+  console.log(newNu)
 }
 
 function step() {
@@ -134,13 +134,30 @@ function step() {
   for (let n = 0; n < nutrients.length; n++) {
     let nutrient = nutrients[n]
     nutrient.step(dtime)
-	}
-	
-	if (Math.random() < 0.01){
-		spawnRandomNutrient( 10, 0.5, new THREE.Vector3(0,0,1), 0.05)
-	}
+  }
+
+  if (Math.random() < 0.01) {
+    spawnRandomNutrient(10, 0.5, new THREE.Vector3(0, 0, 1), 0.05)
+  }
+
+  if (Math.random() < 0.001) {
+		displaymessage ("a testmessage", 2000)
+  }
 
   renderer.render(scene, camera)
+}
+
+function displaymessage(message, timeout) {
+  const el = document.getElementById('message')
+  el.textContent = message
+
+  el.classList.add('visible')
+  el.classList.remove('hidden')
+
+  setTimeout(() => {
+    el.classList.add('hidden')
+    el.classList.remove('visible')
+  }, timeout)
 }
 
 function onWindowResize() {
