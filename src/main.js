@@ -145,11 +145,11 @@ function init() {
 function setRandomBackground() {
 	document.documentElement.style.setProperty(
 		'--back-grad1',
-		gradientpool[Math.floor(Math.random() * gradientpool.length)]
+		gradientArray[Math.floor(Math.random() * gradientArray.length)]
 	)
 	document.documentElement.style.setProperty(
 		'--back-grad2',
-		gradientpool[Math.floor(Math.random() * gradientpool.length)]
+		gradientArray[Math.floor(Math.random() * gradientArray.length)]
 	)
 }
 
