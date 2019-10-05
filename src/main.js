@@ -1,5 +1,7 @@
 import * as THREE from "three";
 
+const OVERLAP = 0.1;
+
 let renderer;
 let scene;
 let camera;
@@ -18,7 +20,7 @@ class Plant {
 	}
 
 	addBodySphere(sphere) {
-		this.spheres.push(this.seed)
+		this.spheres.push(sphere)
 	}
 
 	rotate(x, y, z) {
@@ -32,7 +34,10 @@ class Plant {
 	}
 
 	checkCollision(nutrient) {
-		// TODO
+		for (let i = 0; i < this.spheres.length; i++) {
+			if (this.spheres[i].checkCollision(nutrient))
+				return true;
+		}
 	}
 }
 
@@ -42,6 +47,7 @@ class Nutrient {
 		this.radius = radius;
 		this.addToScene();
 		this.mesh.position.copy(position);
+		this.markedForRemoval = false;
 	}
 
 	addToScene() {
@@ -51,15 +57,20 @@ class Nutrient {
 		scene.add(this.mesh)
 	}
 
+	removeFromScene() {
+		scene.remove(this.mesh)
+	}
+
 	step(dtime) {
 		//console.log(this.velocity.clone());
 		this.mesh.position.add(this.velocity.clone().multiplyScalar(dtime));
+		if (plant.checkCollision(this))
+			this.markedForRemoval = true;
 	}
 }
 
 class BodySphere {
 	constructor(position, radius, parent) {
-		this.position = position;
 		this.radius = radius;
 		this.parent = parent;
 
@@ -78,6 +89,17 @@ class BodySphere {
 		else
 			scene.add(this.mesh);
 	}
+
+	checkCollision(nutrient) {
+		//scene.updateMatrixWorld();
+		let distance = nutrient.mesh.position.distanceTo(this.mesh.getWorldPosition(new THREE.Vector3()));
+		if (distance < nutrient.radius + this.radius - OVERLAP) {
+			plant.addBodySphere(new BodySphere(this.mesh.worldToLocal(nutrient.mesh.position), 0.2, this));
+			return true;
+		}
+
+		return false;
+	}
 }
 
 window.addEventListener("resize", onWindowResize, false);
@@ -95,25 +117,39 @@ function init() {
 	let leaf1 = new BodySphere(new THREE.Vector3(0.3, 0, 0), 0.2, plant.seed)
 	let leaf2 = new BodySphere(new THREE.Vector3(0, 0.3, 0), 0.2, plant.seed)
 	let leaf3 = new BodySphere(new THREE.Vector3(0, 0.3, 0), 0.2, leaf2)
-
-	nutrients.push(new Nutrient(
-		new THREE.Vector3(-2.0, 0, 0),
-		new THREE.Vector3(1, 0, 0),
-		0.2
-	));
+	plant.addBodySphere(leaf1);
+	plant.addBodySphere(leaf2);
+	plant.addBodySphere(leaf3);
 
 	renderer = new THREE.WebGLRenderer({antialias: true});
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
 }
 
+setInterval(function() {
+	nutrients.push(new Nutrient(
+		new THREE.Vector3(-2.0, 0, 0),
+		new THREE.Vector3(1, 0, 0),
+		0.2
+	));
+}, 2000);
+
 function step() {
 	requestAnimationFrame(step);
 
+	/* Execute all nutrient step functions */
 	let dtime = clock.getDelta();
 	for (let n = 0; n < nutrients.length; n++) {
 		let nutrient = nutrients[n];
 		nutrient.step(dtime);
+	}
+
+	/* Remove all nutrients that are marked for removal */
+	for (let n = nutrients.length - 1; n >= 0; n--) {
+		if (nutrients[n].markedForRemoval) {
+			nutrients[n].removeFromScene()
+			nutrients.splice(n, 1)
+		}
 	}
 
 	renderer.render(scene, camera);
