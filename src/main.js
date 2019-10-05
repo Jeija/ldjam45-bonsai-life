@@ -1,10 +1,12 @@
 import * as THREE from "three";
-import image from "../assets/plant_texture.png";
+import seed from "../assets/seed.png";
+import leaves from "../assets/plant_texture.png";
 
 const OVERLAP = 0.1;
 const SPAWNTIME = 0.3;
 const NUTRIENTS_PER_SECOND = 0.5;
 const MAXRADIUS = 2.3;
+const CAMERA_DISTANCE = 4;
 
 let renderer;
 let scene;
@@ -51,7 +53,9 @@ class Nutrient {
 	addToScene() {
 		let geometry = new THREE.SphereGeometry(this.radius, this.radius, this.radius);
 		let material = new THREE.MeshBasicMaterial({
-			color: 0xf0b010
+			color: 0xf0b010,
+			map : new THREE.TextureLoader().load(seed),
+			side : THREE.DoubleSide
 		});
 		this.mesh = new THREE.Mesh(geometry, material);
 		scene.add(this.mesh)
@@ -78,13 +82,16 @@ class BodySphere {
 
 		this.addToScene();
 
+		this.mesh.rotateX(Math.random(Math.PI));
+		this.mesh.rotateY(Math.random(Math.PI));
+		this.mesh.rotateZ(Math.random(Math.PI));
 		this.mesh.position.copy(position);
 	}
 
 	addToScene() {
 		let geometry = new THREE.SphereGeometry(this.radius, 50 * this.radius, 50 * this.radius);
 		let material = new THREE.MeshBasicMaterial({
-			map : new THREE.TextureLoader().load(image),
+			map : new THREE.TextureLoader().load(seed),
 			side : THREE.DoubleSide,
 			transparent : true
 		});
@@ -145,9 +152,10 @@ globalStep();
 
 function init() {
 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
-	camera.position.z = 4;
+	camera.position.z = CAMERA_DISTANCE;
 
 	scene = new THREE.Scene();
+	scene.fog = new THREE.Fog(0x000000, CAMERA_DISTANCE, CAMERA_DISTANCE * 1.03);
 
 	plant = new Plant();
 
@@ -155,6 +163,7 @@ function init() {
 		antialias: true
 	});
 	renderer.setSize(window.innerWidth, window.innerHeight);
+
 	document.body.appendChild(renderer.domElement);
 }
 
@@ -197,7 +206,7 @@ function globalStep() {
 
 	/* Randomly spawn nutrients */
 	if (Math.random() < NUTRIENTS_PER_SECOND * dtime){
-		spawnRandomNutrient(10, 1.5, new THREE.Vector3(0,0,1), 0.1);
+		spawnRandomNutrient(10, 1.5, new THREE.Vector3(0,0,1), 0.2);
 	}
 
 	renderer.render(scene, camera);
