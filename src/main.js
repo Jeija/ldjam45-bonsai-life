@@ -1,4 +1,7 @@
 import * as THREE from "three";
+import image from "../assets/plant_texture.png";
+
+console.log(image);
 
 const OVERLAP = 0.1;
 const SPAWNTIME = 0.3;
@@ -17,7 +20,7 @@ class Plant {
 	constructor() {
 		this.spheres = []
 
-		this.seed = new BodySphere(new THREE.Vector3(0, 0, 0), 0.2, null)
+		this.seed = new BodySphere(new THREE.Vector3(0, 0, 0), 0.8, null)
 		this.spheres.push(this.seed)
 	}
 
@@ -60,7 +63,7 @@ class Nutrient {
 	}
 
 	addToScene() {
-		let geometry = new THREE.SphereGeometry(this.radius, 10, 10);
+		let geometry = new THREE.SphereGeometry(this.radius, this.radius, this.radius);
 		let material = new THREE.MeshBasicMaterial({
 			color: 0xf0b010
 		});
@@ -91,8 +94,13 @@ class BodySphere {
 	}
 
 	addToScene() {
-		let geometry = new THREE.SphereGeometry(this.radius, 10, 10);
-		let material = new THREE.MeshNormalMaterial();
+		let geometry = new THREE.SphereGeometry(this.radius, 50 * this.radius, 50 * this.radius);
+		console.log(image);
+		let material = new THREE.MeshBasicMaterial({
+			map : new THREE.TextureLoader().load(image),
+			side : THREE.DoubleSide,
+			transparent : true
+		});
 		this.mesh = new THREE.Mesh(geometry, material);
 
 		if (this.parent !== null)
@@ -131,7 +139,7 @@ globalStep();
 
 function init() {
 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
-	camera.position.z = 2;
+	camera.position.z = 4;
 
 	scene = new THREE.Scene();
 
@@ -153,8 +161,8 @@ function init() {
 function spawnRandomNutrient(dist, speed, axis, size) {
 	let spawnVec = new THREE.Vector3(dist, 0, 0)
 
-	spawnVec.x = Math.random() * dist
-	spawnVec.applyAxisAngle(axis, Math.random() * 2 * Math.PI)
+	spawnVec.x = dist;
+	spawnVec.applyAxisAngle(axis, Math.random() * 2 * Math.PI);
 
 	let toCenter = spawnVec
 		.clone()
