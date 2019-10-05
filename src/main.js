@@ -3,7 +3,7 @@ import seed from "../assets/seed.png";
 import leaves from "../assets/plant_texture.png";
 
 const OVERLAP = 0.1;
-const SPAWNTIME = 0.3;
+const SPAWNTIME = 0.6;
 const NUTRIENTS_PER_SECOND = 0.5;
 const MAXRADIUS = 2.3;
 const CAMERA_DISTANCE = 4;
@@ -133,7 +133,7 @@ class BodySphere {
 		this.age += dtime;
 
 		if (this.age < SPAWNTIME) {
-			let size = this.age / SPAWNTIME;
+			let size = 1 - Math.pow(this.age / SPAWNTIME - 1, 2);
 			this.mesh.scale.set(size, size, size);
 		} else {
 			this.mesh.scale.set(1, 1, 1);
