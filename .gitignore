@@ -1,0 +1,9 @@
+*
+!.gitignore
+!package.json
+
+!src
+src/*
+!src/*.html
+!src/*.css
+!src/*.js

@@ -1,0 +1,16 @@
+{
+  "name": "ldjam",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel ./src/index.html"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.109.0",
+    "three-orbitcontrols": "^2.108.1"
+  }
+}
