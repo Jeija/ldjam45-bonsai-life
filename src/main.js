@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import * as fx from 'wafxr'
 
 let renderer
 let scene
@@ -8,6 +9,39 @@ let clock = new THREE.Clock()
 
 let plant
 let nutrients = []
+
+const soundArray = {
+  changeNightDay: {
+    volume: -10,
+    sustain: 0.0798,
+    release: 0.1687,
+    frequency: 831,
+    sweep: 0.63,
+    repeat: 16.47,
+    source: 'sine',
+  },
+  addNutrient: {
+    volume: -10,
+    sustain: 0.0867,
+    release: 0.3075,
+    frequency: 248.4,
+    jumpAt1: 0.1072,
+    jumpBy1: 0.321,
+    source: 'sine',
+  },
+  explode: {
+    volume: -10,
+    sustain: 0.064,
+    release: 0.3215,
+    source: 'brown noise',
+    bandpass: 302.8,
+    bandpassQ: 1.12,
+    bandpassSweep: -468.2,
+    compressorThreshold: -39.03,
+  },
+}
+
+const gradientArray = ['#4b301f', '#163427', '#e66465', '#9198e5']
 
 class Plant {
   constructor() {
@@ -52,7 +86,6 @@ class Nutrient {
   }
 
   step(dtime) {
-    //console.log(this.velocity.clone());
     this.mesh.position.add(this.velocity.clone().multiplyScalar(dtime))
   }
 }
@@ -99,26 +132,25 @@ function init() {
   let leaf2 = new BodySphere(new THREE.Vector3(0, 0.3, 0), 0.2, plant.seed)
   let leaf3 = new BodySphere(new THREE.Vector3(0, 0.3, 0), 0.2, leaf2)
 
-  // nutrients.push(
-  //   new Nutrient(new THREE.Vector3(-2.0, 0, 0), new THREE.Vector3(1, 0, 0), 0.2)
-  // )
-
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
   renderer.setSize(window.innerWidth, window.innerHeight)
-	document.body.appendChild(renderer.domElement)
-	
-	setInterval( ()=>{
-    const gradientpool = ['#4b301f', '#163427', '#e66465', '#9198e5']
+  document.body.appendChild(renderer.domElement)
 
-    document.documentElement.style.setProperty(
-      '--back-grad1',
-      gradientpool[Math.floor(Math.random() * gradientpool.length)]
-    )
-    document.documentElement.style.setProperty(
-      '--back-grad2',
-      gradientpool[Math.floor(Math.random() * gradientpool.length)]
-    )
-  }, 5000)
+	// should be changed upon changing "level"
+  setInterval(() => {
+		setRandomBackground()
+  }, 10000)
+}
+
+function setRandomBackground() {
+	document.documentElement.style.setProperty(
+		'--back-grad1',
+		gradientpool[Math.floor(Math.random() * gradientpool.length)]
+	)
+	document.documentElement.style.setProperty(
+		'--back-grad2',
+		gradientpool[Math.floor(Math.random() * gradientpool.length)]
+	)
 }
 
 function spawnRandomNutrient(dist, speed, axis, size) {
@@ -136,8 +168,10 @@ function spawnRandomNutrient(dist, speed, axis, size) {
   let newNu = new Nutrient(spawnVec, toCenter, size)
 
   nutrients.push(newNu)
+}
 
-  console.log(newNu)
+function playSound(opt) {
+  fx.play(opt)
 }
 
 function step() {
@@ -149,15 +183,17 @@ function step() {
     nutrient.step(dtime)
   }
 
+
+	// test call for spawning
   if (Math.random() < 0.01) {
     spawnRandomNutrient(10, 0.5, new THREE.Vector3(0, 0, 1), 0.05)
   }
 
+	// test call for message
   if (Math.random() < 0.001) {
     displaymessage('a testmessage', 2000)
   }
 
-  
   renderer.render(scene, camera)
 }
 
