@@ -4,8 +4,15 @@
     <meta charset="UTF-8" />
     <title>ldjam</title>
     <style>
+      :root {
+        --back-grad1: #4b301f;
+        --back-grad2: #163427;
+      }
       body {
         margin: 0;
+        overflow: hidden;
+        background: radial-gradient(var(--back-grad1) 30%, var(--back-grad2));
+        margin: 0px;
         overflow: hidden;
       }
       canvas {
@@ -28,17 +35,16 @@
         font-size: 3rem;
         position: absolute;
         margin-left: 1rem;
-				margin-bottom: 1rem;
-				left: 0;
+        margin-bottom: 1rem;
+        left: 0;
         bottom: 0;
         color: white;
       }
       #hud #message {
-       
-				color: whitesmoke;
-				position: absolute;
+        color: whitesmoke;
+        position: absolute;
         font-size: 3rem;
-				top: 40%;
+        top: 40%;
         background-color: rgba(0.5, 0.5, 0.5, 0.6);
         padding: 20px;
         border-radius: 15px;

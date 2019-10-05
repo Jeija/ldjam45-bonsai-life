@@ -103,9 +103,22 @@ function init() {
   //   new Nutrient(new THREE.Vector3(-2.0, 0, 0), new THREE.Vector3(1, 0, 0), 0.2)
   // )
 
-  renderer = new THREE.WebGLRenderer({ antialias: true })
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
   renderer.setSize(window.innerWidth, window.innerHeight)
-  document.body.appendChild(renderer.domElement)
+	document.body.appendChild(renderer.domElement)
+	
+	setInterval( ()=>{
+    const gradientpool = ['#4b301f', '#163427', '#e66465', '#9198e5']
+
+    document.documentElement.style.setProperty(
+      '--back-grad1',
+      gradientpool[Math.floor(Math.random() * gradientpool.length)]
+    )
+    document.documentElement.style.setProperty(
+      '--back-grad2',
+      gradientpool[Math.floor(Math.random() * gradientpool.length)]
+    )
+  }, 5000)
 }
 
 function spawnRandomNutrient(dist, speed, axis, size) {
@@ -141,9 +154,10 @@ function step() {
   }
 
   if (Math.random() < 0.001) {
-		displaymessage ("a testmessage", 2000)
+    displaymessage('a testmessage', 2000)
   }
 
+  
   renderer.render(scene, camera)
 }
 
