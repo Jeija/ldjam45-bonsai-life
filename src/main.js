@@ -106,7 +106,7 @@ class BodySphere {
 	checkCollision(nutrient) {
 		scene.updateMatrixWorld();
 		let distance = nutrient.mesh.position.distanceTo(this.mesh.getWorldPosition(new THREE.Vector3()));
-		if (distance < nutrient.radius + this.radius - OVERLAP) {
+		if (distance < (nutrient.radius + this.radius - OVERLAP) * this.mesh.scale.x) {
 			this.spawnChild(nutrient.mesh.position);
 			return true;
 		}
