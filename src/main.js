@@ -1,11 +1,10 @@
 import * as THREE from "three";
 import image from "../assets/plant_texture.png";
 
-console.log(image);
-
 const OVERLAP = 0.1;
 const SPAWNTIME = 0.3;
 const NUTRIENTS_PER_SECOND = 0.5;
+const MAXRADIUS = 2.3;
 
 let renderer;
 let scene;
@@ -84,7 +83,6 @@ class BodySphere {
 
 	addToScene() {
 		let geometry = new THREE.SphereGeometry(this.radius, 50 * this.radius, 50 * this.radius);
-		console.log(image);
 		let material = new THREE.MeshBasicMaterial({
 			map : new THREE.TextureLoader().load(image),
 			side : THREE.DoubleSide,
@@ -99,7 +97,7 @@ class BodySphere {
 	}
 
 	checkCollision(nutrient) {
-		//scene.updateMatrixWorld();
+		scene.updateMatrixWorld();
 		let distance = nutrient.mesh.position.distanceTo(this.mesh.getWorldPosition(new THREE.Vector3()));
 		if (distance < nutrient.radius + this.radius - OVERLAP) {
 			this.spawnChild(nutrient.mesh.position);
@@ -115,7 +113,12 @@ class BodySphere {
 	}
 
 	spawnChild(position) {
-		let child = new BodySphere(this.mesh.worldToLocal(position), 0.2, this);
+		let distanceFromOrigin = position.length();
+
+		/* Determine type and size of child here */
+		let radius = (MAXRADIUS - distanceFromOrigin) * 0.3;
+
+		let child = new BodySphere(this.mesh.worldToLocal(position), radius, this);
 		this.children.push(child);
 	}
 
@@ -194,7 +197,7 @@ function globalStep() {
 
 	/* Randomly spawn nutrients */
 	if (Math.random() < NUTRIENTS_PER_SECOND * dtime){
-		spawnRandomNutrient(10, 0.5, new THREE.Vector3(0,0,1), 0.1);
+		spawnRandomNutrient(10, 1.5, new THREE.Vector3(0,0,1), 0.1);
 	}
 
 	renderer.render(scene, camera);
