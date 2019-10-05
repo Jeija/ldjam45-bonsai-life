@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 const OVERLAP = 0.1;
+const SPAWNTIME = 0.3;
 
 let renderer;
 let scene;
@@ -39,6 +40,13 @@ class Plant {
 				return true;
 		}
 	}
+
+	step(dtime) {
+		for (let n = 0; n < this.spheres.length; n++) {
+			let sphere = this.spheres[n];
+			sphere.step(dtime);
+		}
+	}
 }
 
 class Nutrient {
@@ -52,7 +60,7 @@ class Nutrient {
 
 	addToScene() {
 		let geometry = new THREE.SphereGeometry(this.radius, 10, 10);
-		let material = new THREE.MeshNormalMaterial();
+		let material = new THREE.MeshBasicMaterial({ color: 0xf0b010 });
 		this.mesh = new THREE.Mesh(geometry, material);
 		scene.add(this.mesh)
 	}
@@ -62,7 +70,6 @@ class Nutrient {
 	}
 
 	step(dtime) {
-		//console.log(this.velocity.clone());
 		this.mesh.position.add(this.velocity.clone().multiplyScalar(dtime));
 		if (plant.checkCollision(this))
 			this.markedForRemoval = true;
@@ -73,6 +80,7 @@ class BodySphere {
 	constructor(position, radius, parent) {
 		this.radius = radius;
 		this.parent = parent;
+		this.age = 0;
 
 		this.addToScene();
 
@@ -100,12 +108,23 @@ class BodySphere {
 
 		return false;
 	}
+
+	step(dtime) {
+		this.age += dtime;
+
+		if (this.age < SPAWNTIME) {
+			let size = this.age / SPAWNTIME;
+			this.mesh.scale.set(size, size, size);
+		} else {
+			this.mesh.scale.set(1, 1, 1);
+		}
+	}
 }
 
 window.addEventListener("resize", onWindowResize, false);
 
 init();
-step();
+globalStep();
 
 function init() {
 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
@@ -134,11 +153,15 @@ setInterval(function() {
 	));
 }, 2000);
 
-function step() {
-	requestAnimationFrame(step);
+function globalStep() {
+	requestAnimationFrame(globalStep);
+
+	let dtime = clock.getDelta();
+
+	/* Execute all plant step functions */
+	plant.step(dtime);
 
 	/* Execute all nutrient step functions */
-	let dtime = clock.getDelta();
 	for (let n = 0; n < nutrients.length; n++) {
 		let nutrient = nutrients[n];
 		nutrient.step(dtime);
