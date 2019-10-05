@@ -18,14 +18,7 @@ let nutrients = [];
 
 class Plant {
 	constructor() {
-		this.spheres = []
-
 		this.seed = new BodySphere(new THREE.Vector3(0, 0, 0), 0.8, null)
-		this.spheres.push(this.seed)
-	}
-
-	addBodySphere(sphere) {
-		this.spheres.push(sphere)
 	}
 
 	rotate(x, y, z) {
@@ -39,17 +32,11 @@ class Plant {
 	}
 
 	checkCollision(nutrient) {
-		for (let i = 0; i < this.spheres.length; i++) {
-			if (this.spheres[i].checkCollision(nutrient))
-				return true;
-		}
+		return this.seed.checkCollision(nutrient);
 	}
 
 	step(dtime) {
-		for (let n = 0; n < this.spheres.length; n++) {
-			let sphere = this.spheres[n];
-			sphere.step(dtime);
-		}
+		this.seed.step(dtime);
 	}
 }
 
@@ -86,7 +73,9 @@ class BodySphere {
 	constructor(position, radius, parent) {
 		this.radius = radius;
 		this.parent = parent;
+		this.children = [];
 		this.age = 0;
+		this.depth = parent != null ? (parent.depth + 1) : 0;
 
 		this.addToScene();
 
@@ -113,11 +102,21 @@ class BodySphere {
 		//scene.updateMatrixWorld();
 		let distance = nutrient.mesh.position.distanceTo(this.mesh.getWorldPosition(new THREE.Vector3()));
 		if (distance < nutrient.radius + this.radius - OVERLAP) {
-			plant.addBodySphere(new BodySphere(this.mesh.worldToLocal(nutrient.mesh.position), 0.2, this));
+			this.spawnChild(nutrient.mesh.position);
 			return true;
 		}
 
+		for (let i = 0; i < this.children.length; i++) {
+			if (this.children[i].checkCollision(nutrient))
+				return true;
+		}
+
 		return false;
+	}
+
+	spawnChild(position) {
+		let child = new BodySphere(this.mesh.worldToLocal(position), 0.2, this);
+		this.children.push(child);
 	}
 
 	step(dtime) {
@@ -128,6 +127,10 @@ class BodySphere {
 			this.mesh.scale.set(size, size, size);
 		} else {
 			this.mesh.scale.set(1, 1, 1);
+		}
+
+		for (let i = 0; i < this.children.length; i++) {
+			this.children[i].step(dtime);
 		}
 	}
 }
@@ -143,13 +146,7 @@ function init() {
 
 	scene = new THREE.Scene();
 
-	plant = new Plant()
-	let leaf1 = new BodySphere(new THREE.Vector3(0.3, 0, 0), 0.2, plant.seed)
-	let leaf2 = new BodySphere(new THREE.Vector3(0, 0.3, 0), 0.2, plant.seed)
-	let leaf3 = new BodySphere(new THREE.Vector3(0, 0.3, 0), 0.2, leaf2)
-	plant.addBodySphere(leaf1);
-	plant.addBodySphere(leaf2);
-	plant.addBodySphere(leaf3);
+	plant = new Plant();
 
 	renderer = new THREE.WebGLRenderer({
 		antialias: true
