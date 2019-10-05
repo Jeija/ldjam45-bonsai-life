@@ -7,3 +7,7 @@ src/*
 !src/*.html
 !src/*.css
 !src/*.js
+
+!assets
+assets/*
+!assets/*.png
