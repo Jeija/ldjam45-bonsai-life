@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 const OVERLAP = 0.1;
 const SPAWNTIME = 0.3;
+const NUTRIENTS_PER_SECOND = 0.5;
 
 let renderer;
 let scene;
@@ -60,7 +61,9 @@ class Nutrient {
 
 	addToScene() {
 		let geometry = new THREE.SphereGeometry(this.radius, 10, 10);
-		let material = new THREE.MeshBasicMaterial({ color: 0xf0b010 });
+		let material = new THREE.MeshBasicMaterial({
+			color: 0xf0b010
+		});
 		this.mesh = new THREE.Mesh(geometry, material);
 		scene.add(this.mesh)
 	}
@@ -140,18 +143,27 @@ function init() {
 	plant.addBodySphere(leaf2);
 	plant.addBodySphere(leaf3);
 
-	renderer = new THREE.WebGLRenderer({antialias: true});
+	renderer = new THREE.WebGLRenderer({
+		antialias: true
+	});
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
 }
 
-setInterval(function() {
-	nutrients.push(new Nutrient(
-		new THREE.Vector3(-2.0, 0, 0),
-		new THREE.Vector3(1, 0, 0),
-		0.2
-	));
-}, 2000);
+function spawnRandomNutrient(dist, speed, axis, size) {
+	let spawnVec = new THREE.Vector3(dist, 0, 0)
+
+	spawnVec.x = Math.random() * dist
+	spawnVec.applyAxisAngle(axis, Math.random() * 2 * Math.PI)
+
+	let toCenter = spawnVec
+		.clone()
+		.negate()
+		.normalize()
+		.multiplyScalar(speed);
+
+	nutrients.push(new Nutrient(spawnVec, toCenter, size));
+}
 
 function globalStep() {
 	requestAnimationFrame(globalStep);
@@ -173,6 +185,11 @@ function globalStep() {
 			nutrients[n].removeFromScene()
 			nutrients.splice(n, 1)
 		}
+	}
+
+	/* Randomly spawn nutrients */
+	if (Math.random() < NUTRIENTS_PER_SECOND * dtime){
+		spawnRandomNutrient(10, 0.5, new THREE.Vector3(0,0,1), 0.1);
 	}
 
 	renderer.render(scene, camera);
