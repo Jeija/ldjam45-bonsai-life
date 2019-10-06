@@ -65,8 +65,6 @@ const soundArray = {
 	},
 };
 
-const gradientArray = ['#4b301f', '#163427', '#e66465', '#9198e5'];
-
 class Plant {
 	constructor() {
 		this.seed = new BodySphere(new THREE.Vector3(0, 0, 0), 0.8, null)
@@ -476,6 +474,7 @@ function initGame() {
 	/* Start game */
 	addInputListeners();
 	globalStep();
+	enterGrowPhase();
 }
 
 function displaymessage(message, timeout) {
@@ -491,10 +490,15 @@ function displaymessage(message, timeout) {
 	}, timeout);
 }
 
-function setRandomBackground() {
-	let innerColor = gradientArray[Math.floor(Math.random() * gradientArray.length)];
-	let outerColor = gradientArray[Math.floor(Math.random() * gradientArray.length)];
+function setGrowBackground() {
+	setBackground("#9198e5", "#163427");
+}
 
+function setFightBackground() {
+	setBackground("#4b301f", "#163427");
+}
+
+function setBackground(innerColor, outerColor) {
 	document.documentElement.style.setProperty(
 		'--back-grad1',
 		innerColor
@@ -506,6 +510,14 @@ function setRandomBackground() {
 	);
 
 	scene.fog = new THREE.Fog(new THREE.Color(innerColor), CAMERA_DISTANCE, CAMERA_DISTANCE * 1.03);
+}
+
+function enterGrowPhase() {
+	setGrowBackground();
+}
+
+function enterFightPhase() {
+	setFightBackground();
 }
 
 function playSound(opt) {
@@ -625,11 +637,6 @@ function globalStep() {
 		finishgame()
 	}
 }
-
-/* TODO: Randomly change background gradient */
-//setInterval(() => {
-//	setRandomBackground()
-//}, 10000);
 
 function onWindowResize() {
 	if (camera) {
