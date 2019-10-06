@@ -160,11 +160,27 @@ function init() {
 	plant = new Plant();
 
 	renderer = new THREE.WebGLRenderer({
-		antialias: true
+		antialias: true,
+		alpha: true
 	});
 	renderer.setSize(window.innerWidth, window.innerHeight);
 
 	document.body.appendChild(renderer.domElement);
+
+
+	setInterval(() => {
+		const gradientpool = ['#4b301f', '#163427', '#e66465', '#9198e5'];
+	
+		document.documentElement.style.setProperty(
+			'--back-grad1',
+			gradientpool[Math.floor(Math.random() * gradientpool.length)]
+		);
+
+		document.documentElement.style.setProperty(
+			'--back-grad2',
+			gradientpool[Math.floor(Math.random() * gradientpool.length)]
+		);
+	}, 5000);
 }
 
 function displaymessage(message, timeout) {
