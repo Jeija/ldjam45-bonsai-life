@@ -22,6 +22,9 @@ import leaves_4 from "../assets/plant_4_texture.png";
 import leaves_4_map from "../assets/plant_4_map.png";
 import leaves_4_shiny from "../assets/plant_4_shiny.png";
 
+import vertexShader from './vertex.glsl';
+import fragmentShader from './fragment.glsl';
+
 var leaves_0_array = [seed, seed_map, seed_shiny];
 var leaves_1_array = [leaves_1, leaves_1_map, leaves_1_shiny];
 var leaves_2_array = [leaves_2, leaves_2_map, leaves_2_shiny];
@@ -141,11 +144,17 @@ class Nutrient {
 
 	addToScene() {
 		let geometry = new THREE.SphereGeometry(this.radius, this.radius, this.radius);
-		let material = new THREE.MeshBasicMaterial({
-			color: 0xf0b010,
-			map : new THREE.TextureLoader().load(seed),
-			side : THREE.DoubleSide
+
+		let material = new THREE.ShaderMaterial({
+			uniforms: {
+				colorB: { type: 'vec3', value: new THREE.Color(0xFFFF00) },
+				colorA: { type: 'vec3', value: new THREE.Color(0xCCCCCC) },
+				quot: { type: 'float', value: this.radius },
+			},
+			vertexShader,
+			fragmentShader,
 		});
+
 		this.mesh = new THREE.Mesh(geometry, material);
 		scene.add(this.mesh)
 	}
@@ -223,13 +232,28 @@ class Tutule {
 		this.angularVelocity = angularVelocity;
 	}
 
-	addToScene(position) {
-		objloader.load(tutule, (obj) => {
-			this.mesh = obj;
-			this.mesh.scale.set(0.003, 0.003, 0.003);
 
-			scene.add(this.mesh);
-			this.mesh.position.copy(position);
+	addToScene(position) {
+		objloader.load(tutule, obj => {
+			this.mesh = obj
+			this.mesh.scale.set(0.003, 0.003, 0.003)
+	
+			this.mesh.traverse(function(child) {
+				if (child instanceof THREE.Mesh) {
+					child.material = new THREE.ShaderMaterial({
+						uniforms: {
+							colorB: { type: 'vec3', value: new THREE.Color(0xC7101B) },
+							colorA: { type: 'vec3', value: new THREE.Color(0x000000) },
+							quot: { type: 'float', value: 50.0 },
+						},
+						vertexShader,
+						fragmentShader,
+					});
+				}
+			});
+	
+			scene.add(this.mesh)
+			this.mesh.position.copy(position)
 		});
 	}
 
@@ -428,6 +452,21 @@ class Flower {
 			this.flowermesh = obj;
 			this.flowermesh.scale.set(0.0, 0.0, 0.0);
 
+
+			this.flowermesh.traverse(function(child) {
+				if (child instanceof THREE.Mesh) {
+					child.material = new THREE.ShaderMaterial({
+						uniforms: {
+							colorB: { type: 'vec3', value: new THREE.Color(0x9272d3) },
+							colorA: { type: 'vec3', value: new THREE.Color(0x19ac92) },
+							quot: { type: 'float', value: 50.0 },
+						},
+						vertexShader,
+						fragmentShader,
+					});
+				}
+			});
+
 			this.mesh.add(this.flowermesh);
 			this.flowermesh.lookAt(new THREE.Vector3().multiplyScalar(2));
 			this.flowermesh.rotateX(-Math.PI / 2);
@@ -439,6 +478,20 @@ class Flower {
 		objloader.load(flowerFruit, (obj) => {
 			this.fruitmesh = obj;
 			this.fruitmesh.scale.set(0.003, 0.003, 0.003);
+
+			this.fruitmesh.traverse(function(child) {
+				if (child instanceof THREE.Mesh) {
+					child.material = new THREE.ShaderMaterial({
+						uniforms: {
+							colorB: { type: 'vec3', value: new THREE.Color(0x670003) },
+							colorA: { type: 'vec3', value: new THREE.Color(0xFF7F50) },
+							quot: { type: 'float', value: 50.0 },
+						},
+						vertexShader,
+						fragmentShader,
+					});
+				}
+			});
 
 			this.mesh.add(this.fruitmesh);
 			this.fruitmesh.lookAt(new THREE.Vector3().multiplyScalar(2));
@@ -568,10 +621,10 @@ function initGame() {
 	dirLight.castShadow = true;
 
 	// Set up shadow properties for the light
-	dirLight.shadow.mapSize.width = 512;  // default
+	dirLight.shadow.mapSize.width = 512;	// default
 	dirLight.shadow.mapSize.height = 512; // default
-	dirLight.shadow.camera.near = 0.5;    // default
-	dirLight.shadow.camera.far = 500;     // default
+	dirLight.shadow.camera.near = 0.5;		// default
+	dirLight.shadow.camera.far = 500;		 // default
 	scene.add(dirLight);
 
 	let light = new THREE.DirectionalLight(0xcccccc, 1);

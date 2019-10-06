@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "assets": "^3.0.1",
+    "parcel-plugin-glsl": "^0.1.0",
     "three": "^0.109.0",
     "wafxr": "^0.1.1"
   }
