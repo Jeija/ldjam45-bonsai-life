@@ -376,7 +376,7 @@ class BodySphere {
 		let radius = (MAXRADIUS - distanceFromOrigin) * 0.3;
 
 		let child;
-		if (this.depth >= 1) {
+		if (this.depth >= 4) {
 			child = new Flower(this.mesh.worldToLocal(position), radius, this);
 		} else {
 			child = new BodySphere(this.mesh.worldToLocal(position), radius, this);
