@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import * as fx from 'wafxr';
 import seed from "../assets/seed.png";
 import leaves from "../assets/plant_texture.png";
 
@@ -16,6 +17,40 @@ let clock = new THREE.Clock();
 
 let plant;
 let nutrients = [];
+
+
+const soundArray = {
+	changeNightDay: {
+		volume: -10,
+		sustain: 0.0798,
+		release: 0.1687,
+		frequency: 831,
+		sweep: 0.63,
+		repeat: 16.47,
+		source: 'sine',
+	},
+	addNutrient: {
+		volume: -10,
+		sustain: 0.0867,
+		release: 0.3075,
+		frequency: 248.4,
+		jumpAt1: 0.1072,
+		jumpBy1: 0.321,
+		source: 'sine',
+	},
+	explode: {
+		volume: -10,
+		sustain: 0.064,
+		release: 0.3215,
+		source: 'brown noise',
+		bandpass: 302.8,
+		bandpassQ: 1.12,
+		bandpassSweep: -468.2,
+		compressorThreshold: -39.03,
+	},
+};
+
+const gradientArray = ['#4b301f', '#163427', '#e66465', '#9198e5'];
 
 class Plant {
 	constructor() {
@@ -166,21 +201,6 @@ function init() {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 
 	document.body.appendChild(renderer.domElement);
-
-
-	setInterval(() => {
-		const gradientpool = ['#4b301f', '#163427', '#e66465', '#9198e5'];
-	
-		document.documentElement.style.setProperty(
-			'--back-grad1',
-			gradientpool[Math.floor(Math.random() * gradientpool.length)]
-		);
-
-		document.documentElement.style.setProperty(
-			'--back-grad2',
-			gradientpool[Math.floor(Math.random() * gradientpool.length)]
-		);
-	}, 5000);
 }
 
 function displaymessage(message, timeout) {
@@ -194,6 +214,23 @@ function displaymessage(message, timeout) {
 		el.classList.add('hidden');
 		el.classList.remove('visible');
 	}, timeout);
+}
+
+
+function setRandomBackground() {
+	document.documentElement.style.setProperty(
+		'--back-grad1',
+		gradientArray[Math.floor(Math.random() * gradientArray.length)]
+	);
+	document.documentElement.style.setProperty(
+		'--back-grad2',
+		gradientArray[Math.floor(Math.random() * gradientArray.length)]
+	);
+}
+
+
+function playSound(opt) {
+	fx.play(opt)
 }
 
 function spawnRandomNutrient(dist, speed, axis, size) {
@@ -238,12 +275,18 @@ function globalStep() {
 		spawnRandomNutrient(10, 1.5, new THREE.Vector3(0,0,1), 0.2);
 	}
 
+	/* TODO: Randomly display messages */
 	if (Math.random() < 0.1 * dtime) {
 		displaymessage("a testmessage", 2000);
 	}
 
 	renderer.render(scene, camera);
 }
+
+/* TODO: Randomly change background gradient */
+setInterval(() => {
+	setRandomBackground()
+}, 10000);
 
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
