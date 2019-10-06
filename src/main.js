@@ -50,6 +50,9 @@ const GRAVITY = new THREE.Vector3(0, -10, 0);
 const RISING_GRAVITY = new THREE.Vector3(0, 8, 0);
 const INITIAL_TIME = 120;
 
+const FRUIT_GAIN = 30;
+const TUTULE_LOSS = 10;
+
 const clock = new THREE.Clock();
 const objloader = new OBJLoader();
 
@@ -237,12 +240,16 @@ class Tutule {
 			let collisionTarget = plant.checkCollision(this);
 			if (collisionTarget) {
 				this.markedForRemoval = true;
+
+				// Is not seed
 				if (collisionTarget.detachFromParent()) {
 					let branchVelocity = this.velocity
 						.clone()
 						.multiplyScalar(1.2)
 						.add(new THREE.Vector3(0, 0, 3));
 					looseBranches.push(new LooseBranch(collisionTarget.mesh, branchVelocity));
+				} else {
+					looseTime(10);
 				}
 			}
 		}
@@ -349,7 +356,6 @@ class BodySphere {
 		this.children.push(child);
 
 		playSound(soundArray.addNutrient);
-		displaymessage("+10", 1000); // TODO...
 	}
 
 	step(dtime) {
@@ -458,6 +464,7 @@ class Flower {
 			if (this.fruitAge > FRUIT_GROWTIME) {
 				this.hasFruit = false;
 				this.fruitAge = 0;
+				gainTime(20);
 
 				risingFruits.push(new RisingFruit(this.fruitmesh, new THREE.Vector3()));
 			}
@@ -585,12 +592,12 @@ function displaymessage(message, timeout) {
 	const el = document.getElementById('message');
 	el.textContent = message;
 
-	el.classList.add('visible');
-	el.classList.remove('hidden');
+	el.classList.add("visible");
+	el.classList.remove("hidden");
 
 	setTimeout(() => {
-		el.classList.add('hidden');
-		el.classList.remove('visible');
+		el.classList.add("hidden");
+		el.classList.remove("visible");
 	}, timeout);
 }
 
@@ -617,10 +624,12 @@ function setBackground(innerColor, outerColor) {
 }
 
 function enterGrowPhase() {
+	displaymessage("Grow!", 1000);
 	setGrowBackground();
 }
 
 function enterFightPhase() {
+	displaymessage("Fight!", 1000);
 	setFightBackground();
 }
 
@@ -741,13 +750,8 @@ function globalStep() {
 		spawnRandomTutule(10, 1.5, new THREE.Vector3(0, 0, 1));
 	}
 
-	/* TODO: Randomly display messages */
-	if (Math.random() < 0.1 * dtime) {
-		displaymessage("a testmessage", 2000);
-	}
-
 	gameTime -= dtime;
-	document.querySelector("#timeEl").textContent = gameTime.toFixed(2);
+	document.querySelector("#timeEl").textContent = gameTime.toFixed(1) + "s";
 
 	renderer.render(scene, camera);
 
@@ -780,6 +784,17 @@ function onWindowResize() {
 	}
 }
 
+function gainTime(time) {
+	let newGameTime = Math.min(INITIAL_TIME, gameTime + time);
+	let increase = newGameTime - gameTime;
+	displaymessage("+" + increase.toFixed(1) + "s", 2000);
+	gameTime += increase;
+}
+
+function looseTime(time) {
+	displaymessage("-" + time + "s", 2000);
+	gameTime -= time;
+}
 
 /**** Mouse + Touch Control ****/
 function addInputListeners() {
