@@ -1,12 +1,41 @@
 import * as THREE from "three";
 import seed from "../assets/seed.png";
-import leaves from "../assets/plant_texture.png";
+import seed_map from "../assets/seed_map.png";
+import seed_shiny from "../assets/seed_shiny.png";
+
+import leaves_1 from "../assets/plant_1_texture.png";
+import leaves_1_map from "../assets/plant_1_map.png";
+import leaves_1_shiny from "../assets/plant_1_shiny.png";
+
+import leaves_2 from "../assets/plant_2_texture.png";
+import leaves_2_map from "../assets/plant_2_map.png";
+import leaves_2_shiny from "../assets/plant_2_shiny.png";
+
+import leaves_3 from "../assets/plant_1_texture.png";
+import leaves_3_map from "../assets/plant_1_map.png";
+import leaves_3_shiny from "../assets/plant_1_shiny.png";
+
+import leaves_4 from "../assets/plant_1_texture.png";
+import leaves_4_map from "../assets/plant_1_map.png";
+import leaves_4_shiny from "../assets/plant_1_shiny.png";
+
+
+var leaves_0_array = [seed, seed_map, seed_shiny];
+var leaves_1_array = [leaves_1, leaves_1_map, leaves_1_shiny];
+var leaves_2_array = [leaves_2, leaves_2_map, leaves_2_shiny];
+var leaves_3_array = [leaves_3, leaves_3_map, leaves_3_shiny];
+var leaves_4_array = [leaves_4, leaves_4_map, leaves_4_shiny];
+
+var leavesArray = [leaves_1_array, leaves_2_array,leaves_3_array,leaves_4_array];
+
+leavesArray.push();
 
 const OVERLAP = 0.1;
 const SPAWNTIME = 0.6;
 const NUTRIENTS_PER_SECOND = 0.5;
 const MAXRADIUS = 2.3;
 const CAMERA_DISTANCE = 4;
+
 
 let renderer;
 let scene;
@@ -19,7 +48,7 @@ let nutrients = [];
 
 class Plant {
 	constructor() {
-		this.seed = new BodySphere(new THREE.Vector3(0, 0, 0), 0.8, null)
+		this.seed = new BodySphere(new THREE.Vector3(0, 0, 0), 0.8, null, true)
 	}
 
 	rotate(x, y, z) {
@@ -56,6 +85,8 @@ class Nutrient {
 			color: 0xf0b010,
 			map : new THREE.TextureLoader().load(seed),
 			side : THREE.DoubleSide
+
+
 		});
 		this.mesh = new THREE.Mesh(geometry, material);
 		scene.add(this.mesh)
@@ -73,14 +104,14 @@ class Nutrient {
 }
 
 class BodySphere {
-	constructor(position, radius, parent) {
+	constructor(position, radius, parent, first) {
 		this.radius = radius;
 		this.parent = parent;
 		this.children = [];
 		this.age = 0;
 		this.depth = parent != null ? (parent.depth + 1) : 0;
 
-		this.addToScene();
+		this.addToScene(first);
 
 		this.mesh.rotateX(Math.random(Math.PI));
 		this.mesh.rotateY(Math.random(Math.PI));
@@ -88,13 +119,50 @@ class BodySphere {
 		this.mesh.position.copy(position);
 	}
 
-	addToScene() {
+	addToScene(first) {
 		let geometry = new THREE.SphereGeometry(this.radius, 50 * this.radius, 50 * this.radius);
-		let material = new THREE.MeshBasicMaterial({
-			map : new THREE.TextureLoader().load(seed),
+		
+			console.log("FIRST")
+
+
+		const rndIdx = Math.floor(Math.random()*leavesArray.length)
+		
+		let material = null;
+		if (first){
+				 material = new THREE.MeshPhongMaterial({
+			
+
+			map : new THREE.TextureLoader().load(leaves_0_array[0]),
+			bumpMap: new THREE.TextureLoader().load(leaves_0_array[1]),
+
+			bumpScale: 0.5,
 			side : THREE.DoubleSide,
-			transparent : true
+			transparent : true,
+
+			specularMap : THREE.ImageUtils.loadTexture(leaves_0_array[2]),
+			specular : new THREE.Color(0x55855e)
+
+
 		});
+		}
+
+		else{ 
+		 material = new THREE.MeshPhongMaterial({
+			
+
+			map : new THREE.TextureLoader().load(leavesArray[rndIdx][0]),
+			bumpMap: new THREE.TextureLoader().load(leavesArray[rndIdx][1]),
+
+			bumpScale: 0.5,
+			side : THREE.DoubleSide,
+			transparent : true,
+
+			specularMap : THREE.ImageUtils.loadTexture(leavesArray[rndIdx][2]),
+			specular : new THREE.Color(0x55855e)
+
+
+		});
+		}
 		this.mesh = new THREE.Mesh(geometry, material);
 
 		if (this.parent !== null)
@@ -163,6 +231,24 @@ function init() {
 		antialias: true
 	});
 	renderer.setSize(window.innerWidth, window.innerHeight);
+
+	var light	= new THREE.AmbientLight( 0x888888 )
+	scene.add( light )
+	var light	= new THREE.DirectionalLight( 'white', 1)
+	light.position.set(15,15,15)
+	light.target.position.set( 10, 10, 10 )
+	light.castShadow = true;   
+
+	//Set up shadow properties for the light
+	light.shadow.mapSize.width = 512;  // default
+	light.shadow.mapSize.height = 512; // default
+	light.shadow.camera.near = 0.5;    // default
+	light.shadow.camera.far = 500;     // default
+	scene.add( light )
+
+	var light	= new THREE.DirectionalLight( 0xcccccc, 1 )
+	light.position.set(5,3,5)
+	scene.add( light )
 
 	document.body.appendChild(renderer.domElement);
 }
