@@ -3,7 +3,7 @@ import * as fx from 'wafxr';
 import seed from "../assets/seed.png";
 import leaves from "../assets/plant_texture.png";
 
-const OVERLAP = 0.1;
+const OVERLAP = 0.3;
 const SPAWNTIME = 0.6;
 const NUTRIENTS_PER_SECOND = 0.5;
 const MAXRADIUS = 2.3;
@@ -141,7 +141,7 @@ class BodySphere {
 	checkCollision(nutrient) {
 		scene.updateMatrixWorld();
 		let distance = nutrient.mesh.position.distanceTo(this.mesh.getWorldPosition(new THREE.Vector3()));
-		if (distance < (nutrient.radius + this.radius - OVERLAP) * this.mesh.scale.x) {
+		if (distance < (nutrient.radius + this.radius) * (1 - OVERLAP) * this.mesh.scale.x) {
 			this.spawnChild(nutrient.mesh.position);
 			return true;
 		}
@@ -304,7 +304,7 @@ function onWindowResize() {
 let mouseDown = false;
 renderer.domElement.addEventListener("mousemove", function() {
 	if (mouseDown)
-		plant.rotate(event.movementY * 0.01, event.movementX * 0.01, 0);
+		plant.rotate(event.movementY * 0.005, event.movementX * 0.005, 0);
 });
 
 renderer.domElement.addEventListener("mousedown", function() {
