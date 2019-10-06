@@ -37,12 +37,17 @@ import flowerPetals from "../assets/FlowerPetals.obj";
 
 const OVERLAP = 0.3;
 const SPAWNTIME = 0.6;
+const FLOWER_GROWTIME = 5.0;
+const FRUIT_GROWTIME = 5.0;
+const FLOWER_MAXSCALE = 0.001;
+const FRUIT_MAXSCALE = 0.003;
 const NUTRIENTS_PER_SECOND = 0.8;
 const TUTULES_PER_SECOND = 0.2;
 const MAXRADIUS = 2.3;
 const CAMERA_DISTANCE = 4;
 const LOOSEBRANCH_MAX_AGE = 2;
 const GRAVITY = new THREE.Vector3(0, -10, 0);
+const RISING_GRAVITY = new THREE.Vector3(0, 8, 0);
 const INITIAL_TIME = 120;
 
 const clock = new THREE.Clock();
@@ -56,6 +61,7 @@ let plant;
 let nutrients;
 let tutules;
 let looseBranches;
+let risingFruits;
 let gameTime;
 
 let gameRunning = false;
@@ -175,6 +181,31 @@ class LooseBranch {
 	}
 }
 
+class RisingFruit {
+	constructor(mesh, velocity) {
+		this.velocity = velocity;
+		this.mesh = mesh;
+		this.age = 0;
+		this.markedForRemoval = false;
+
+		scene.attach(mesh);
+	}
+
+	removeFromScene() {
+		scene.remove(this.mesh)
+	}
+
+	step(dtime) {
+		this.velocity.add(RISING_GRAVITY.clone().multiplyScalar(dtime));
+		this.mesh.position.add(this.velocity.clone().multiplyScalar(dtime));
+		this.age += dtime;
+
+		if (this.age > LOOSEBRANCH_MAX_AGE) {
+			this.markedForRemoval = true;
+		}
+	}
+}
+
 class Tutule {
 	constructor(position, velocity, angularVelocity) {
 		this.velocity = velocity;
@@ -192,26 +223,6 @@ class Tutule {
 			scene.add(this.mesh);
 			this.mesh.position.copy(position);
 		});
-
-		/*fbxloader.load(tutuleKopf, (fbx) => {
-			this.animationmixer = new THREE.AnimationMixer(fbx);
-			fbx.animations.forEach((clip) => {
-				this.animationmixer.clipAction(clip).play();
-			});
-
-			scene.add(fbx);
-			this.mesh.scale.set(0.003, 0.003, 0.003);
-			this.mesh.position.copy(position);
-		});*/
-
-		/*let geometry = new THREE.SphereGeometry(0.2, 10, 10);
-		let material = new THREE.MeshBasicMaterial({
-			color: 0xffa000,
-			side : THREE.DoubleSide
-		});
-		this.mesh = new THREE.Mesh(geometry, material);
-		this.mesh.scale.set(0.1, 0.1, 0.1);
-		scene.add(this.mesh)*/
 	}
 
 	removeFromScene() {
@@ -329,7 +340,7 @@ class BodySphere {
 		let radius = (MAXRADIUS - distanceFromOrigin) * 0.3;
 
 		let child;
-		if (this.depth >= 4) {
+		if (this.depth >= 1) {
 			child = new Flower(this.mesh.worldToLocal(position), radius, this);
 		} else {
 			child = new BodySphere(this.mesh.worldToLocal(position), radius, this);
@@ -371,6 +382,12 @@ class Flower {
 		this.mesh.rotateY(Math.random(Math.PI));
 		this.mesh.rotateZ(Math.random(Math.PI));
 		this.mesh.position.copy(position);
+
+		/* No fruit yet */
+		this.hasFruit = false;
+		this.fruitmesh = null;
+		this.fruitAge = 0;
+		
 	}
 
 	addToScene() {
@@ -398,29 +415,19 @@ class Flower {
 		this.flowermesh = null;
 		objloader.load(flowerPetals, (obj) => {
 			this.flowermesh = obj;
-			this.flowermesh.scale.set(0.001, 0.001, 0.001);
+			this.flowermesh.scale.set(0.0, 0.0, 0.0);
 
 			this.mesh.add(this.flowermesh);
 			this.flowermesh.lookAt(new THREE.Vector3().multiplyScalar(2));
 			this.flowermesh.rotateX(-Math.PI / 2);
 			this.flowermesh.translateY(this.radius);
 		});
-
-		/* No fruit yet */
-		this.hasFruit = false;
-		this.fruitmesh = null;
 	}
 
 	addFruit() {
 		objloader.load(flowerFruit, (obj) => {
 			this.fruitmesh = obj;
 			this.fruitmesh.scale.set(0.003, 0.003, 0.003);
-			/*let geometry = new THREE.SphereGeometry(0.15, 100 * this.radius, 100 * this.radius);
-			let material = new THREE.MeshBasicMaterial({
-				color : 0xff0000,
-				side : THREE.DoubleSide
-			});
-			this.fruitmesh = new THREE.Mesh(geometry, material);*/
 
 			this.mesh.add(this.fruitmesh);
 			this.fruitmesh.lookAt(new THREE.Vector3().multiplyScalar(2));
@@ -447,9 +454,16 @@ class Flower {
 	}
 
 	nutrientCollided(position) {
-		console.log("Nutrient-to-flower collision");
-		// TODO: check if has fruit
-		this.addFruit();
+		if (this.hasFruit) {
+			if (this.fruitAge > FRUIT_GROWTIME) {
+				this.hasFruit = false;
+				this.fruitAge = 0;
+
+				risingFruits.push(new RisingFruit(this.fruitmesh, new THREE.Vector3()));
+			}
+		} else if (this.age > FLOWER_GROWTIME) {
+			this.addFruit();
+		}
 	}
 
 	detachFromParent() {
@@ -464,6 +478,7 @@ class Flower {
 	step(dtime) {
 		this.age += dtime;
 
+		/* Spawn flower sphere */
 		if (this.age < SPAWNTIME) {
 			let size = 1 - Math.pow(this.age / SPAWNTIME - 1, 2);
 			this.mesh.scale.set(size, size, size);
@@ -471,9 +486,21 @@ class Flower {
 			this.mesh.scale.set(1, 1, 1);
 		}
 
-		for (let i = 0; i < this.children.length; i++) {
-			this.children[i].step(dtime);
+		/* Grow flower */
+		let size = this.age < FLOWER_GROWTIME ?
+			(1 - Math.pow(this.age / FLOWER_GROWTIME - 1, 2)) * FLOWER_MAXSCALE :
+			FLOWER_MAXSCALE;
+		this.flowermesh.scale.set(size, size, size);
+
+		/* Grow fruit */
+		if (this.hasFruit) {
+			this.fruitAge += dtime;
+			let size = this.fruitAge < FRUIT_GROWTIME ?
+				(1 - Math.pow(this.fruitAge / FRUIT_GROWTIME - 1, 2)) * FRUIT_MAXSCALE :
+				FRUIT_MAXSCALE;
+			this.fruitmesh.scale.set(size, size, size);
 		}
+		
 
 		if (this.hasFruit) {
 			this.fruitmesh.rotateY(Math.PI * dtime);
@@ -543,6 +570,7 @@ function initGame() {
 	nutrients = [];
 	tutules = [];
 	looseBranches = [];
+	risingFruits = [];
 	gameTime = INITIAL_TIME;
 	gameRunning = true;
 	plant = new Plant();
@@ -664,6 +692,12 @@ function globalStep() {
 		looseBranch.step(dtime);
 	}
 
+	/* Execute all rising fruit step functions */
+	for (let n = 0; n < risingFruits.length; n++) {
+		let risingFruit = risingFruits[n];
+		risingFruit.step(dtime);
+	}
+
 
 	/* Remove all nutrients that are marked for removal */
 	for (let n = nutrients.length - 1; n >= 0; n--) {
@@ -686,6 +720,14 @@ function globalStep() {
 		if (looseBranches[n].markedForRemoval) {
 			looseBranches[n].removeFromScene()
 			looseBranches.splice(n, 1)
+		}
+	}
+
+	/* Remove all rising fruits that are marked for removal */
+	for (let n = risingFruits.length - 1; n >= 0; n--) {
+		if (risingFruits[n].markedForRemoval) {
+			risingFruits[n].removeFromScene()
+			risingFruits.splice(n, 1)
 		}
 	}
 
