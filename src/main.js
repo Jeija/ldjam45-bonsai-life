@@ -74,6 +74,7 @@ let looseBranches;
 let risingFruits;
 let gameTime;
 let gamePhase;
+let gamePoints;
 
 let gameRunning = false;
 
@@ -385,6 +386,7 @@ class BodySphere {
 		this.children.push(child);
 
 		playSound(soundArray.addNutrient);
+		gainPoints(5);
 	}
 
 	step(dtime) {
@@ -523,11 +525,13 @@ class Flower {
 				this.hasFruit = false;
 				this.fruitAge = 0;
 				gainTime(20);
+				gainPoints(50);
 
 				risingFruits.push(new RisingFruit(this.fruitmesh, new THREE.Vector3()));
 			}
 		} else if (this.age > FLOWER_GROWTIME) {
 			this.addFruit();
+			gainPoints(20);
 		}
 	}
 
@@ -552,10 +556,12 @@ class Flower {
 		}
 
 		/* Grow flower */
-		let size = this.age < FLOWER_GROWTIME ?
-			(1 - Math.pow(this.age / FLOWER_GROWTIME - 1, 2)) * FLOWER_MAXSCALE :
-			FLOWER_MAXSCALE;
-		this.flowermesh.scale.set(size, size, size);
+		if (this.flowermesh) {
+			let size = this.age < FLOWER_GROWTIME ?
+				(1 - Math.pow(this.age / FLOWER_GROWTIME - 1, 2)) * FLOWER_MAXSCALE :
+				FLOWER_MAXSCALE;
+			this.flowermesh.scale.set(size, size, size);
+		}
 
 		/* Grow fruit */
 		if (this.hasFruit) {
@@ -638,6 +644,7 @@ function initGame() {
 	risingFruits = [];
 	gameTime = INITIAL_TIME;
 	gamePhase = PHASE.GROW;
+	gamePoints = 0;
 	gameRunning = true;
 	plant = new Plant();
 
@@ -865,6 +872,11 @@ function gainTime(time) {
 	let increase = newGameTime - gameTime;
 	displaymessage("+" + increase.toFixed(1) + "s", 2000);
 	gameTime += increase;
+}
+
+function gainPoints(points) {
+	gamePoints += points;
+	document.querySelector("#points").textContent = gamePoints.toFixed(0).padStart(3, '0');
 }
 
 function looseTime(time) {
