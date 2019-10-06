@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import seed from "../assets/seed.png";
+import seed from "../assets/seed_texture.png";
 import seed_map from "../assets/seed_map.png";
 import seed_shiny from "../assets/seed_shiny.png";
 
@@ -11,13 +11,13 @@ import leaves_2 from "../assets/plant_2_texture.png";
 import leaves_2_map from "../assets/plant_2_map.png";
 import leaves_2_shiny from "../assets/plant_2_shiny.png";
 
-import leaves_3 from "../assets/plant_1_texture.png";
-import leaves_3_map from "../assets/plant_1_map.png";
-import leaves_3_shiny from "../assets/plant_1_shiny.png";
+import leaves_3 from "../assets/plant_3_texture.png";
+import leaves_3_map from "../assets/plant_3_map.png";
+import leaves_3_shiny from "../assets/plant_3_shiny.png";
 
-import leaves_4 from "../assets/plant_1_texture.png";
-import leaves_4_map from "../assets/plant_1_map.png";
-import leaves_4_shiny from "../assets/plant_1_shiny.png";
+import leaves_4 from "../assets/plant_4_texture.png";
+import leaves_4_map from "../assets/plant_4_map.png";
+import leaves_4_shiny from "../assets/plant_4_shiny.png";
 
 
 var leaves_0_array = [seed, seed_map, seed_shiny];
