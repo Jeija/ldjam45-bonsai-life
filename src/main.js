@@ -16,6 +16,7 @@ const NUTRIENTS_PER_SECOND = 0.8;
 const TUTULES_PER_SECOND = 0.2;
 const MAXRADIUS = 2.3;
 const CAMERA_DISTANCE = 4;
+const LOOSEBRANCH_MAX_AGE = 2;
 const GRAVITY = new THREE.Vector3(0, -10, 0);
 
 let renderer;
@@ -127,13 +128,24 @@ class LooseBranch {
 	constructor(mesh, velocity) {
 		this.velocity = velocity;
 		this.mesh = mesh;
+		this.age = 0;
+		this.markedForRemoval = false;
 
 		scene.attach(mesh);
+	}
+
+	removeFromScene() {
+		scene.remove(this.mesh)
 	}
 
 	step(dtime) {
 		this.velocity.add(GRAVITY.clone().multiplyScalar(dtime));
 		this.mesh.position.add(this.velocity.clone().multiplyScalar(dtime));
+		this.age += dtime;
+
+		if (this.age > LOOSEBRANCH_MAX_AGE) {
+			this.markedForRemoval = true;
+		}
 	}
 }
 
@@ -423,6 +435,14 @@ function globalStep() {
 		if (tutules[n].markedForRemoval) {
 			tutules[n].removeFromScene()
 			tutules.splice(n, 1)
+		}
+	}
+
+	/* Remove all loose branches that are marked for removal */
+	for (let n = looseBranches.length - 1; n >= 0; n--) {
+		if (looseBranches[n].markedForRemoval) {
+			looseBranches[n].removeFromScene()
+			looseBranches.splice(n, 1)
 		}
 	}
 
