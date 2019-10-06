@@ -34,7 +34,6 @@ import flowerFruit from "../assets/FlowerFruit.obj";
 import flowerPetals from "../assets/FlowerPetals.obj";
 
 
-
 const OVERLAP = 0.3;
 const SPAWNTIME = 0.6;
 const FLOWER_GROWTIME = 5.0;
@@ -42,7 +41,7 @@ const FRUIT_GROWTIME = 5.0;
 const FLOWER_MAXSCALE = 0.001;
 const FRUIT_MAXSCALE = 0.003;
 const NUTRIENTS_PER_SECOND = 0.8;
-const TUTULES_PER_SECOND = 0.2;
+const TUTULES_PER_SECOND = 0.3;
 const MAXRADIUS = 2.3;
 const CAMERA_DISTANCE = 4;
 const LOOSEBRANCH_MAX_AGE = 2;
@@ -56,6 +55,11 @@ const TUTULE_LOSS = 10;
 const clock = new THREE.Clock();
 const objloader = new OBJLoader();
 
+const PHASE = {
+	GROW : 1,
+	FIGHT : 2
+};
+
 let renderer;
 let scene;
 let camera;
@@ -66,6 +70,7 @@ let tutules;
 let looseBranches;
 let risingFruits;
 let gameTime;
+let gamePhase;
 
 let gameRunning = false;
 
@@ -579,6 +584,7 @@ function initGame() {
 	looseBranches = [];
 	risingFruits = [];
 	gameTime = INITIAL_TIME;
+	gamePhase = PHASE.GROW;
 	gameRunning = true;
 	plant = new Plant();
 
@@ -624,11 +630,13 @@ function setBackground(innerColor, outerColor) {
 }
 
 function enterGrowPhase() {
+	gamePhase = PHASE.GROW;
 	displaymessage("Grow!", 1000);
 	setGrowBackground();
 }
 
 function enterFightPhase() {
+	gamePhase = PHASE.FIGHT;
 	displaymessage("Fight!", 1000);
 	setFightBackground();
 }
@@ -741,12 +749,12 @@ function globalStep() {
 	}
 
 	/* Randomly spawn nutrients */
-	if (Math.random() < NUTRIENTS_PER_SECOND * dtime){
+	if (gamePhase === PHASE.GROW && Math.random() < NUTRIENTS_PER_SECOND * dtime){
 		spawnRandomNutrient(10, 1.5, new THREE.Vector3(0, 0, 1), 0.2);
 	}
 
 	/* Randomly spawn tutules */
-	if (Math.random() < TUTULES_PER_SECOND * dtime){
+	if (gamePhase === PHASE.FIGHT && Math.random() < TUTULES_PER_SECOND * dtime){
 		spawnRandomTutule(10, 1.5, new THREE.Vector3(0, 0, 1));
 	}
 
@@ -757,7 +765,7 @@ function globalStep() {
 
 	/* Handle remaining game time */
 	const lifebar = document.querySelector(".Lifetime");
-	lifebar.style.width = (gameTime / INITIAL_TIME) * 76.0 + "vw";
+	lifebar.style.setProperty("width", Math.round((gameTime / INITIAL_TIME) * 76.0) + "vw");
 
 	if (gameTime < 30){
 		document.documentElement.style.setProperty(
