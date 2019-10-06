@@ -11,3 +11,4 @@ src/*
 !assets
 assets/*
 !assets/*.png
+!assets/*.gltf
