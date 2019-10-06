@@ -684,13 +684,13 @@ function setBackground(innerColor, outerColor) {
 
 function enterGrowPhase() {
 	gamePhase = PHASE.GROW;
-	displaymessage("Grow!", 1000);
+	displaymessage("Grow!", 2000);
 	setGrowBackground();
 }
 
 function enterFightPhase() {
 	gamePhase = PHASE.FIGHT;
-	displaymessage("Fight!", 1000);
+	displaymessage("Fight!", 2000);
 	setFightBackground();
 }
 
@@ -831,6 +831,21 @@ function globalStep() {
 			"#465298"
 		);
 	}
+
+	if (gameTime < INITIAL_TIME-60 && !gamePhase === PHASE.FIGHT)
+		enterFightPhase()
+	if (gameTime < INITIAL_TIME-(60+10) && !gamePhase === PHASE.GROW)
+		enterGrowPhase()
+	if (gameTime < INITIAL_TIME-(60+10+55) && !gamePhase === PHASE.FIGHT)
+		enterFightPhase()
+	if (gameTime < INITIAL_TIME-(60+10+55+10) && !gamePhase === PHASE.GROW)
+		enterGrowPhase()
+	if (gameTime < INITIAL_TIME-(60+10+55+10+50) && !gamePhase === PHASE.FIGHT)
+		enterFightPhase()
+	if (gameTime < INITIAL_TIME-(60+10+55+10+50+10) && !gamePhase === PHASE.GROW)
+		enterGrowPhase()
+	if (gameTime < INITIAL_TIME-(60+10+55+10+50+10+45) && !gamePhase === PHASE.FIGHT)
+		enterFightPhase()
 
 	if (gameTime <= 0) {
 		finishgame()
