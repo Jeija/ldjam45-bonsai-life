@@ -8,6 +8,9 @@ import tutule from "../assets/tutule.obj";
 import flowerFruit from "../assets/FlowerFruit.obj";
 import flowerPetals from "../assets/FlowerPetals.obj";
 
+import vertexShader from './vertex.glsl'
+import fragmentShader from './fragment.glsl'
+
 const OVERLAP = 0.3;
 const SPAWNTIME = 0.6;
 const NUTRIENTS_PER_SECOND = 0.8;
@@ -102,11 +105,16 @@ class Nutrient {
 
 	addToScene() {
 		let geometry = new THREE.SphereGeometry(this.radius, this.radius, this.radius);
-		let material = new THREE.MeshBasicMaterial({
-			color: 0xf0b010,
-			map : new THREE.TextureLoader().load(seed),
-			side : THREE.DoubleSide
-		});
+
+		let material = new THREE.ShaderMaterial({
+			uniforms: {
+				colorB: { type: 'vec3', value: new THREE.Color(0xFFFF00) },
+				colorA: { type: 'vec3', value: new THREE.Color(0xCCCCCC) },
+				quot: { type: 'float', value: this.radius },
+			},
+			vertexShader,
+			fragmentShader,
+		})
 		this.mesh = new THREE.Mesh(geometry, material);
 		scene.add(this.mesh)
 	}
@@ -159,35 +167,29 @@ class Tutule {
 		this.angularVelocity = angularVelocity;
 	}
 
-	addToScene(position) {
-		objloader.load(tutule, (obj) => {
-			this.mesh = obj;
-			this.mesh.scale.set(0.003, 0.003, 0.003);
+  addToScene(position) {
+    objloader.load(tutule, obj => {
+      this.mesh = obj
+      this.mesh.scale.set(0.003, 0.003, 0.003)
 
-			scene.add(this.mesh);
-			this.mesh.position.copy(position);
-		});
+      this.mesh.traverse(function(child) {
+        if (child instanceof THREE.Mesh) {
+          child.material = new THREE.ShaderMaterial({
+            uniforms: {
+              colorB: { type: 'vec3', value: new THREE.Color(0xC7101B) },
+							colorA: { type: 'vec3', value: new THREE.Color(0x000000) },
+							quot: { type: 'float', value: 50.0 },
+            },
+            vertexShader,
+            fragmentShader,
+          })
+        }
+      })
 
-		/*fbxloader.load(tutuleKopf, (fbx) => {
-			this.animationmixer = new THREE.AnimationMixer(fbx);
-			fbx.animations.forEach((clip) => {
-				this.animationmixer.clipAction(clip).play();
-			});
-
-			scene.add(fbx);
-			this.mesh.scale.set(0.003, 0.003, 0.003);
-			this.mesh.position.copy(position);
-		});*/
-
-		/*let geometry = new THREE.SphereGeometry(0.2, 10, 10);
-		let material = new THREE.MeshBasicMaterial({
-			color: 0xffa000,
-			side : THREE.DoubleSide
-		});
-		this.mesh = new THREE.Mesh(geometry, material);
-		this.mesh.scale.set(0.1, 0.1, 0.1);
-		scene.add(this.mesh)*/
-	}
+      scene.add(this.mesh)
+      this.mesh.position.copy(position)
+    })
+  }
 
 	removeFromScene() {
 		scene.remove(this.mesh)
@@ -339,17 +341,46 @@ class Flower {
 		else
 			scene.add(this.mesh);
 
-		/* Flower */
-		this.flowermesh = null;
-		objloader.load(flowerPetals, (obj) => {
-			this.flowermesh = obj;
-			this.flowermesh.scale.set(0.001, 0.001, 0.001);
+		// /* Flower */
+		// this.flowermesh = null;
+		// objloader.load(flowerPetals, (obj) => {
+		// 	this.flowermesh = obj;
+		// 	this.flowermesh.scale.set(0.001, 0.001, 0.001);
 
-			this.mesh.add(this.flowermesh);
+		// 	this.mesh.add(this.flowermesh);
+		// 	this.flowermesh.lookAt(new THREE.Vector3().multiplyScalar(2));
+		// 	this.flowermesh.rotateX(-Math.PI / 2);
+		// 	this.flowermesh.translateY(this.radius);
+		// });
+
+		this.flowermesh = null;
+			objloader.load(flowerPetals, obj => {
+				this.flowermesh = obj;
+				this.flowermesh.scale.set(0.001, 0.001, 0.001);
+				
+				this.flowermesh.traverse(function(child) {
+					if (child instanceof THREE.Mesh) {
+						child.material = new THREE.ShaderMaterial({
+							uniforms: {
+								colorB: { type: 'vec3', value: new THREE.Color(0x9272d3) },
+								colorA: { type: 'vec3', value: new THREE.Color(0x19ac92) },
+								quot: { type: 'float', value: 50.0 },
+							},
+							vertexShader,
+							fragmentShader,
+						})
+					}
+				})
+				
+				this.mesh.add(this.flowermesh);
 			this.flowermesh.lookAt(new THREE.Vector3().multiplyScalar(2));
 			this.flowermesh.rotateX(-Math.PI / 2);
 			this.flowermesh.translateY(this.radius);
-		});
+	
+				// scene.add(this.mesh)
+				// this.mesh.position.copy(position)
+			})
+		
 
 		/* No fruit yet */
 		this.fruitmesh = null;
@@ -359,12 +390,20 @@ class Flower {
 		objloader.load(flowerFruit, (obj) => {
 			this.fruitmesh = obj;
 			this.fruitmesh.scale.set(0.003, 0.003, 0.003);
-			/*let geometry = new THREE.SphereGeometry(0.15, 100 * this.radius, 100 * this.radius);
-			let material = new THREE.MeshBasicMaterial({
-				color : 0xff0000,
-				side : THREE.DoubleSide
-			});
-			this.fruitmesh = new THREE.Mesh(geometry, material);*/
+
+			this.fruitmesh.traverse(function(child) {
+				if (child instanceof THREE.Mesh) {
+					child.material = new THREE.ShaderMaterial({
+						uniforms: {
+							colorB: { type: 'vec3', value: new THREE.Color(0x670003) },
+							colorA: { type: 'vec3', value: new THREE.Color(0xFF7F50) },
+							quot: { type: 'float', value: 50.0 },
+						},
+						vertexShader,
+						fragmentShader,
+					})
+				}
+			})
 	
 			this.mesh.add(this.fruitmesh);
 			this.fruitmesh.lookAt(new THREE.Vector3().multiplyScalar(2));
