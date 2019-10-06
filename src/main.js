@@ -120,6 +120,8 @@ class Nutrient {
 		if (collisionTarget) {
 			this.markedForRemoval = true;
 			collisionTarget.spawnChild(this.mesh.position);
+			playSound(soundArray.addNutrient);
+			displaymessage( "+10", 1000);
 		}
 	}
 }
