@@ -190,7 +190,6 @@ function init() {
 	camera.position.z = CAMERA_DISTANCE;
 
 	scene = new THREE.Scene();
-	scene.fog = new THREE.Fog(0x000000, CAMERA_DISTANCE, CAMERA_DISTANCE * 1.03);
 
 	plant = new Plant();
 
@@ -218,14 +217,20 @@ function displaymessage(message, timeout) {
 
 
 function setRandomBackground() {
+	let innerColor = gradientArray[Math.floor(Math.random() * gradientArray.length)];
+	let outerColor = gradientArray[Math.floor(Math.random() * gradientArray.length)];
+
 	document.documentElement.style.setProperty(
 		'--back-grad1',
-		gradientArray[Math.floor(Math.random() * gradientArray.length)]
+		innerColor
 	);
+
 	document.documentElement.style.setProperty(
 		'--back-grad2',
-		gradientArray[Math.floor(Math.random() * gradientArray.length)]
+		outerColor
 	);
+
+	scene.fog = new THREE.Fog(new THREE.Color(innerColor), CAMERA_DISTANCE, CAMERA_DISTANCE * 1.03);
 }
 
 
