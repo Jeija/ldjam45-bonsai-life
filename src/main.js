@@ -1,11 +1,14 @@
 import * as THREE from "three";
 import * as fx from 'wafxr';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 
 import seed from "../assets/seed.png";
 import leaves from "../assets/plant_texture.png";
-import tutule from "../assets/tutule_morph.gltf";
+import tutule from "../assets/tutule.obj";
+import flowerFruit from "../assets/FlowerFruit.obj";
+import flowerPetals from "../assets/FlowerPetals.obj";
 //import tutuleArms from "../assets/tutuleArms.fbx";
 //import tutuleKopf from "../assets/tutuleKopf.fbx";
 
@@ -21,6 +24,7 @@ const INITIAL_TIME = 120;
 
 const clock = new THREE.Clock();
 const gltfloader = new GLTFLoader();
+const objloader = new OBJLoader();
 const fbxloader = new FBXLoader();
 
 let renderer;
@@ -122,9 +126,7 @@ class Nutrient {
 		let collisionTarget = plant.checkCollision(this);
 		if (collisionTarget) {
 			this.markedForRemoval = true;
-			collisionTarget.spawnChild(this.mesh.position);
-			playSound(soundArray.addNutrient);
-			displaymessage( "+10", 1000);
+			collisionTarget.nutrientCollided(this.mesh.position);
 		}
 	}
 }
@@ -164,14 +166,9 @@ class Tutule {
 	}
 
 	addToScene(position) {
-		gltfloader.load(tutule, (gltf) => {
-			this.mesh = gltf.scene;
+		objloader.load(tutule, (obj) => {
+			this.mesh = obj;
 			this.mesh.scale.set(0.003, 0.003, 0.003);
-
-			this.animationmixer = new THREE.AnimationMixer(this.mesh);
-			gltf.animations.forEach((clip) => {
-				this.animationmixer.clipAction(clip).play();
-			});
 
 			scene.add(this.mesh);
 			this.mesh.position.copy(position);
@@ -218,8 +215,6 @@ class Tutule {
 					looseBranches.push(new LooseBranch(collisionTarget.mesh, branchVelocity));
 				}
 			}
-
-			this.animationmixer.update(dtime);
 		}
 	}
 }
@@ -284,14 +279,135 @@ class BodySphere {
 		}
 	}
 
-	spawnChild(position) {
+	nutrientCollided(position) {
+		/* Spawn Child */
 		let distanceFromOrigin = position.length();
 
 		/* Determine type and size of child here */
 		let radius = (MAXRADIUS - distanceFromOrigin) * 0.3;
 
-		let child = new BodySphere(this.mesh.worldToLocal(position), radius, this);
+		let child;
+		if (this.depth >= 1) {
+			child = new Flower(this.mesh.worldToLocal(position), radius, this);
+		} else {
+			child = new BodySphere(this.mesh.worldToLocal(position), radius, this);
+		}
+
 		this.children.push(child);
+
+		playSound(soundArray.addNutrient);
+		displaymessage("+10", 1000); // TODO...
+	}
+
+	step(dtime) {
+		this.age += dtime;
+
+		if (this.age < SPAWNTIME) {
+			let size = 1 - Math.pow(this.age / SPAWNTIME - 1, 2);
+			this.mesh.scale.set(size, size, size);
+		} else {
+			this.mesh.scale.set(1, 1, 1);
+		}
+
+		for (let i = 0; i < this.children.length; i++) {
+			this.children[i].step(dtime);
+		}
+	}
+}
+
+class Flower {
+	constructor(position, radius, parent) {
+		this.radius = radius;
+		this.parent = parent;
+		this.children = [];
+		this.age = 0;
+		this.depth = parent != null ? (parent.depth + 1) : 0;
+
+		this.addToScene();
+
+		this.mesh.rotateX(Math.random(Math.PI));
+		this.mesh.rotateY(Math.random(Math.PI));
+		this.mesh.rotateZ(Math.random(Math.PI));
+		this.mesh.position.copy(position);
+	}
+
+	addToScene() {
+		/* Sphere */
+		let geometry = new THREE.SphereGeometry(this.radius, 100 * this.radius, 100 * this.radius);
+		let material = new THREE.MeshBasicMaterial({
+			color : 0xffff00,
+			side : THREE.DoubleSide
+		});
+		this.mesh = new THREE.Mesh(geometry, material);
+
+		if (this.parent !== null)
+			this.parent.mesh.add(this.mesh);
+		else
+			scene.add(this.mesh);
+
+		/* Flower */
+		this.flowermesh = null;
+		objloader.load(flowerPetals, (obj) => {
+			this.flowermesh = obj;
+			this.flowermesh.scale.set(0.001, 0.001, 0.001);
+
+			this.mesh.add(this.flowermesh);
+			this.flowermesh.lookAt(new THREE.Vector3().multiplyScalar(2));
+			this.flowermesh.rotateX(-Math.PI / 2);
+			this.flowermesh.translateY(this.radius);
+		});
+
+		/* No fruit yet */
+		this.fruitmesh = null;
+	}
+
+	addFruit() {
+		objloader.load(flowerFruit, (obj) => {
+			this.fruitmesh = obj;
+			this.fruitmesh.scale.set(0.003, 0.003, 0.003);
+			/*let geometry = new THREE.SphereGeometry(0.15, 100 * this.radius, 100 * this.radius);
+			let material = new THREE.MeshBasicMaterial({
+				color : 0xff0000,
+				side : THREE.DoubleSide
+			});
+			this.fruitmesh = new THREE.Mesh(geometry, material);*/
+	
+			this.mesh.add(this.fruitmesh);
+			this.fruitmesh.lookAt(new THREE.Vector3().multiplyScalar(2));
+			this.fruitmesh.rotateX(Math.PI / 2);
+			this.fruitmesh.translateY(-2 * this.radius);
+		});
+	}
+
+	checkCollision(foreignBody) {
+		scene.updateMatrixWorld();
+		let distance = foreignBody.mesh.position.distanceTo(this.mesh.getWorldPosition(new THREE.Vector3()));
+		if (distance < (foreignBody.radius + this.radius) * (1 - OVERLAP) * this.mesh.scale.x) {
+			return this;
+		}
+
+		for (let i = 0; i < this.children.length; i++) {
+			let childCollision = this.children[i].checkCollision(foreignBody);
+			if (childCollision !== false)
+				return childCollision;
+		}
+
+		return false;
+	}
+
+	nutrientCollided(position) {
+		console.log("Nutrient-to-flower collision");
+		// TODO: check if has fruit
+		this.addFruit();
+	}
+
+	detachFromParent() {
+		if (this.parent !== null) {
+			this.parent.detachChild(this);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	step(dtime) {
@@ -356,6 +472,9 @@ function initGame() {
 	gameTime = INITIAL_TIME;
 	gameRunning = true;
 	plant = new Plant();
+
+	let flower = new Flower(new THREE.Vector3(2, 0, 0), 0.2, null);
+	flower.addFruit();
 
 	/* Start game */
 	addInputListeners();
