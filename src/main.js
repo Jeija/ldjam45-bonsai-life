@@ -352,6 +352,7 @@ class Flower {
 		});
 
 		/* No fruit yet */
+		this.hasFruit = false;
 		this.fruitmesh = null;
 	}
 
@@ -370,6 +371,7 @@ class Flower {
 			this.fruitmesh.lookAt(new THREE.Vector3().multiplyScalar(2));
 			this.fruitmesh.rotateX(Math.PI / 2);
 			this.fruitmesh.translateY(-2 * this.radius);
+			this.hasFruit = true;
 		});
 	}
 
@@ -416,6 +418,10 @@ class Flower {
 
 		for (let i = 0; i < this.children.length; i++) {
 			this.children[i].step(dtime);
+		}
+
+		if (this.hasFruit) {
+			this.fruitmesh.rotateY(Math.PI * dtime);
 		}
 	}
 }
@@ -466,9 +472,6 @@ function initGame() {
 	gameTime = INITIAL_TIME;
 	gameRunning = true;
 	plant = new Plant();
-
-	let flower = new Flower(new THREE.Vector3(2, 0, 0), 0.2, null);
-	flower.addFruit();
 
 	/* Start game */
 	addInputListeners();
