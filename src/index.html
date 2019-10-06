@@ -17,13 +17,15 @@
 				}
 
 				#hud {
-						position: absolute;
-						pointer-events: none;
-						top: 0;
-						left: 0;
-						bottom: 0;
-						right: 0;
-						z-index: 1;
+					position: absolute;
+					pointer-events: none;
+					top: 0;
+					left: 0;
+					bottom: 0;
+					right: 0;
+					z-index: 1;
+					display: flex;
+					justify-content: center;
 				}
 
 				#hud .content {
@@ -32,7 +34,30 @@
 						margin-left: 1rem;
 						margin-bottom: 1rem;
 						bottom: 0;
+						bottom: 0;
 						color: white;
+				}
+
+				#hud #message {
+					color: whitesmoke;
+					position: absolute;
+					font-size: 3rem;
+					top: 40%;
+					background-color: rgba(0.5, 0.5, 0.5, 0.6);
+					padding: 20px;
+					border-radius: 15px;
+				}
+
+				.visible {
+					visibility: visible;
+					opacity: 1;
+					transition: opacity 2s linear;
+				}
+
+				.hidden {
+					visibility: hidden;
+					opacity: 0;
+					transition: visibility 0s 2s, opacity 2s linear;
 				}
 		</style>
 </head>
@@ -45,6 +70,7 @@
 						<span>time left:</span>
 						<span id="timeEl">0</span>
 				</div>
+				<div id="message" class="hidden"></div>
 		</div>
 
 </body>

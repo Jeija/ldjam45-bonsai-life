@@ -167,6 +167,19 @@ function init() {
 	document.body.appendChild(renderer.domElement);
 }
 
+function displaymessage(message, timeout) {
+	const el = document.getElementById('message');
+	el.textContent = message;
+
+	el.classList.add('visible');
+	el.classList.remove('hidden');
+
+	setTimeout(() => {
+		el.classList.add('hidden');
+		el.classList.remove('visible');
+	}, timeout);
+}
+
 function spawnRandomNutrient(dist, speed, axis, size) {
 	let spawnVec = new THREE.Vector3(dist, 0, 0)
 
@@ -207,6 +220,10 @@ function globalStep() {
 	/* Randomly spawn nutrients */
 	if (Math.random() < NUTRIENTS_PER_SECOND * dtime){
 		spawnRandomNutrient(10, 1.5, new THREE.Vector3(0,0,1), 0.2);
+	}
+
+	if (Math.random() < 0.1 * dtime) {
+		displaymessage("a testmessage", 2000);
 	}
 
 	renderer.render(scene, camera);
