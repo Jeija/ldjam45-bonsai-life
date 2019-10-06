@@ -12,10 +12,11 @@ import tutule from "../assets/tutule_morph.gltf";
 
 const OVERLAP = 0.3;
 const SPAWNTIME = 0.6;
-const NUTRIENTS_PER_SECOND = 0.5;
-const TUTULES_PER_SECOND = 1.0;
+const NUTRIENTS_PER_SECOND = 0.8;
+const TUTULES_PER_SECOND = 0.8;
 const MAXRADIUS = 2.3;
 const CAMERA_DISTANCE = 4;
+const GRAVITY = new THREE.Vector3(0, -10, 0);
 
 let renderer;
 let scene;
@@ -28,6 +29,7 @@ const fbxloader = new FBXLoader();
 let plant;
 let nutrients = [];
 let tutules = [];
+let looseBranches = [];
 
 
 const soundArray = {
@@ -121,6 +123,20 @@ class Nutrient {
 	}
 }
 
+class LooseBranch {
+	constructor(mesh, velocity) {
+		this.velocity = velocity;
+		this.mesh = mesh;
+
+		scene.attach(mesh);
+	}
+
+	step(dtime) {
+		this.velocity.add(GRAVITY.clone().multiplyScalar(dtime));
+		this.mesh.position.add(this.velocity.clone().multiplyScalar(dtime));
+	}
+}
+
 class Tutule {
 	constructor(position, velocity, angularVelocity) {
 		this.velocity = velocity;
@@ -174,8 +190,12 @@ class Tutule {
 			this.mesh.position.add(this.velocity.clone().multiplyScalar(dtime));
 			this.mesh.rotateOnAxis(this.angularVelocity.clone().normalize(), this.angularVelocity.length());
 
-			if (plant.checkCollision(this)) {
+			let collisionTarget = plant.checkCollision(this);
+			if (collisionTarget) {
 				this.markedForRemoval = true;
+				if (collisionTarget.detachFromParent()) {
+					looseBranches.push(new LooseBranch(collisionTarget.mesh, this.velocity));
+				}
 			}
 
 			this.animationmixer.update(dtime);
@@ -222,11 +242,25 @@ class BodySphere {
 		}
 
 		for (let i = 0; i < this.children.length; i++) {
-			if (this.children[i].checkCollision(foreignBody))
-				return this;
+			let childCollision = this.children[i].checkCollision(foreignBody);
+			if (childCollision !== false)
+				return childCollision;
 		}
 
 		return false;
+	}
+
+	detachChild(child) {
+		this.children.splice(this.children.indexOf(child), 1);
+	}
+
+	detachFromParent() {
+		if (this.parent !== null) {
+			this.parent.detachChild(this);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	spawnChild(position) {
@@ -363,6 +397,12 @@ function globalStep() {
 	for (let n = 0; n < tutules.length; n++) {
 		let tutule = tutules[n];
 		tutule.step(dtime);
+	}
+
+	/* Execute all loose branch step functions */
+	for (let n = 0; n < looseBranches.length; n++) {
+		let looseBranch = looseBranches[n];
+		looseBranch.step(dtime);
 	}
 
 
