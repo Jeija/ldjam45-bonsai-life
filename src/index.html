@@ -4,6 +4,7 @@
 <head>
 		<meta charset="UTF-8" />
 		<title>ldjam</title>
+		<link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
 		<style>
 				:root {
 					--back-grad1: #4b301f;
@@ -11,9 +12,8 @@
 	  			}
 
 				body {
+						font-family: 'Roboto Mono', monospace;
 						margin: 0;
-						overflow: hidden;
-						transition: background-color .3s linear;
 						background: radial-gradient(var(--back-grad1) 30%, var(--back-grad2));
 						margin: 0px;
 						overflow: hidden;
@@ -23,6 +23,19 @@
 						width: 100%;
 						height: 100%;
 						z-index: 0;
+				}
+
+				#gamepage {
+					position: absolute;
+					pointer-events: none;
+					top: 0;
+					left: 0;
+					bottom: 0;
+					right: 0;
+					z-index: 1;
+					display: flex;
+					justify-content: center;
+					user-select: none;
 				}
 
 				#hud {
@@ -43,7 +56,6 @@
 						margin-left: 1rem;
 						margin-bottom: 1rem;
 						bottom: 0;
-						bottom: 0;
 						color: white;
 				}
 
@@ -60,28 +72,97 @@
 				.visible {
 					visibility: visible;
 					opacity: 1;
+					transform: scale(1);
 					transition: opacity 2s linear;
 				}
 
 				.hidden {
 					visibility: hidden;
 					opacity: 0;
+					transform: scale(0);
 					transition: visibility 0s 2s, opacity 2s linear;
 				}
+
+				#startpage{
+					width: 700px;
+					margin: auto;
+					z-index: 1;
+
+					/* background-color: #163427; */
+					display: flex;
+					flex-direction: column;
+					justify-content: space-between;
+					color: white;
+
+				}
+				#startpage > h1 {
+					text-align: center;
+					margin-bottom: 0px;
+				}
+				#startpage > img {
+					margin-left: auto;
+					margin-right: auto;
+					display: block;
+				}
+				#startpage > button {
+					margin-left: auto;
+					margin-right: auto;
+					display: block;
+					margin-top: 15px;
+					color: inherit;
+					font-size: 1rem;
+					font-family: inherit;
+					border: 3px solid white;
+					background-color: transparent;
+					padding: 15px 100px 15px 100px;
+					cursor: pointer;
+
+				}
+				.subtitle{
+					text-align: center;
+					margin-top: 0;
+				}
+				#canvas {
+					position: absolute;
+					top: 0;
+					left: 0;
+					bottom: 0;
+					right: 0;
+					background-color: transparent;
+				}
+
 		</style>
 </head>
 
 <body>
-		<script src="main.js"></script>
 
+
+	<div id="startpage">
+		<h1>bonsai life</h1>
+		<p class="subtitle">Live your life as a plant. Gather nutrients and grow!</p>
+		<img src="../assets/bonsai_video.gif" width=350 height=350	/>
+		<button id="startbutton">START GAME</button>
+
+		<ol>
+			<li>Stack nutrients to bring your plant to bloom</li>
+			<li>Rotate your plants core to manage the growth areas</li>
+			<li>Beware of bazillions - defend your core by sacrificing blossoms or branches</li>
+			<li>Bazillion will decrease your time - grow fruits to renew your life strength</li>
+		</ol>
+
+	</div>
+
+	<div id="gamepage" class="hidden">
 		<div id="hud">
-				<div class="content">
-						<span>time left:</span>
-						<span id="timeEl">0</span>
-				</div>
-				<div id="message" class="hidden"></div>
-		</div>
+			<div class="content">
+				<span>time left:</span>
+				<span id="timeEl">0</span>
 
+			</div>
+			<div id="message" class="hidden"></div>
+		</div>
+	</div>
+	<script src="main.js"></script>
 </body>
 
 </html>

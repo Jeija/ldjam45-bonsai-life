@@ -9,7 +9,6 @@ import tutule from "../assets/tutule_morph.gltf";
 //import tutuleArms from "../assets/tutuleArms.fbx";
 //import tutuleKopf from "../assets/tutuleKopf.fbx";
 
-
 const OVERLAP = 0.3;
 const SPAWNTIME = 0.6;
 const NUTRIENTS_PER_SECOND = 0.8;
@@ -18,19 +17,23 @@ const MAXRADIUS = 2.3;
 const CAMERA_DISTANCE = 4;
 const LOOSEBRANCH_MAX_AGE = 2;
 const GRAVITY = new THREE.Vector3(0, -10, 0);
-
-let renderer;
-let scene;
-let camera;
+const INITIAL_TIME = 120;
 
 const clock = new THREE.Clock();
 const gltfloader = new GLTFLoader();
 const fbxloader = new FBXLoader();
 
+let renderer;
+let scene;
+let camera;
+
 let plant;
-let nutrients = [];
-let tutules = [];
-let looseBranches = [];
+let nutrients;
+let tutules;
+let looseBranches;
+let gameTime;
+
+let gameRunning = false;
 
 
 const soundArray = {
@@ -309,23 +312,54 @@ class BodySphere {
 
 window.addEventListener("resize", onWindowResize, false);
 
-init();
-globalStep();
 
-function init() {
+document.getElementById("startbutton").onclick = function() {
+	document.querySelector("#startpage").style.display = "none";
+	document.querySelector("#gamepage").classList.remove("hidden");
+	document.querySelector("#gamepage").classList.add("visible");
+
+	initGame();
+}
+
+function finishgame(){
+	/* Stop three.js */
+	gameRunning = false;
+	document.body.removeChild(renderer.domElement);
+	renderer = null;
+	scene.dispose();
+	camera = null;
+
+	/* Show start screen */
+	document.querySelector("#startpage").style.display = "block";
+	document.querySelector("#gamepage").classList.add("hidden");
+	document.querySelector("#gamepage").classList.remove("visible");
+}
+
+function initGame() {
+	/* Start three.js */
 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
 	camera.position.z = CAMERA_DISTANCE;
 
 	scene = new THREE.Scene();
-	plant = new Plant();
 
 	renderer = new THREE.WebGLRenderer({
 		antialias: true,
 		alpha: true
 	});
 	renderer.setSize(window.innerWidth, window.innerHeight);
-
 	document.body.appendChild(renderer.domElement);
+
+	/* Reset game */
+	nutrients = [];
+	tutules = [];
+	looseBranches = [];
+	gameTime = INITIAL_TIME;
+	gameRunning = true;
+	plant = new Plant();
+
+	/* Start game */
+	addInputListeners();
+	globalStep();
 }
 
 function displaymessage(message, timeout) {
@@ -398,6 +432,9 @@ function spawnRandomTutule(dist, speed, axis) {
 }
 
 function globalStep() {
+	if (gameRunning !== true)
+		return;
+
 	requestAnimationFrame(globalStep);
 
 	let dtime = clock.getDelta();
@@ -463,48 +500,58 @@ function globalStep() {
 		displaymessage("a testmessage", 2000);
 	}
 
+	gameTime -= dtime;
+	document.querySelector("#timeEl").textContent = gameTime.toFixed(2);
+
 	renderer.render(scene, camera);
+
+	if (gameTime <= 0) {
+		finishgame()
+	}
 }
 
 /* TODO: Randomly change background gradient */
-setInterval(() => {
-	setRandomBackground()
-}, 10000);
+//setInterval(() => {
+//	setRandomBackground()
+//}, 10000);
 
 function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
-	renderer.setSize(window.innerWidth, window.innerHeight);
+	if (camera) {
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+		renderer.setSize(window.innerWidth, window.innerHeight);
+	}
 }
 
 
 /**** Mouse + Touch Control ****/
-let mouseDown = false;
-let touchtrack = {x: 0, y: 0};
-renderer.domElement.addEventListener("mousemove", function() {
-	if (mouseDown)
-		plant.rotate(event.movementY * 0.005, event.movementX * 0.005, 0);
-});
+function addInputListeners() {
+	let mouseDown = false;
+	let touchtrack = {x: 0, y: 0};
+	renderer.domElement.addEventListener("mousemove", function() {
+		if (mouseDown)
+			plant.rotate(event.movementY * 0.005, event.movementX * 0.005, 0);
+	});
 
-renderer.domElement.addEventListener("touchmove", function() {
-
-		const movX = event.touches[0].clientX - touchtrack.x
-		const movY = event.touches[0].clientY - touchtrack.y
+	renderer.domElement.addEventListener("touchmove", function() {
+		const movX = event.touches[0].clientX - touchtrack.x;
+		const movY = event.touches[0].clientY - touchtrack.y;
 		plant.rotate(movY * 0.01, movX * 0.01, 0);
-		
-		touchtrack.x = event.touches[0].clientX
-		touchtrack.y = event.touches[0].clientY
-});
 
-renderer.domElement.addEventListener("mousedown", function() {
-	mouseDown = true;
-});
+		touchtrack.x = event.touches[0].clientX;
+		touchtrack.y = event.touches[0].clientY;
+	});
 
-renderer.domElement.addEventListener("mouseup", function() {
-	mouseDown = false;
-});
+	renderer.domElement.addEventListener("mousedown", function() {
+		mouseDown = true;
+	});
 
-renderer.domElement.addEventListener("touchdown", function() {
-	touchtrack.x = event.touches[0].clientX;
-	touchtrack.y = event.touches[0].clientY;
-});
+	renderer.domElement.addEventListener("mouseup", function() {
+		mouseDown = false;
+	});
+
+	renderer.domElement.addEventListener("touchdown", function() {
+		touchtrack.x = event.touches[0].clientX;
+		touchtrack.y = event.touches[0].clientY;
+	});
+}

@@ -12,3 +12,4 @@ src/*
 assets/*
 !assets/*.png
 !assets/*.gltf
+!assets/*.gif
