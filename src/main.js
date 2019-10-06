@@ -1,16 +1,12 @@
 import * as THREE from "three";
 import * as fx from 'wafxr';
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 
 import seed from "../assets/seed.png";
 import leaves from "../assets/plant_texture.png";
 import tutule from "../assets/tutule.obj";
 import flowerFruit from "../assets/FlowerFruit.obj";
 import flowerPetals from "../assets/FlowerPetals.obj";
-//import tutuleArms from "../assets/tutuleArms.fbx";
-//import tutuleKopf from "../assets/tutuleKopf.fbx";
 
 const OVERLAP = 0.3;
 const SPAWNTIME = 0.6;
@@ -23,9 +19,7 @@ const GRAVITY = new THREE.Vector3(0, -10, 0);
 const INITIAL_TIME = 120;
 
 const clock = new THREE.Clock();
-const gltfloader = new GLTFLoader();
 const objloader = new OBJLoader();
-const fbxloader = new FBXLoader();
 
 let renderer;
 let scene;
