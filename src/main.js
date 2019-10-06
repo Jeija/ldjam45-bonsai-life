@@ -205,6 +205,17 @@ function startgame(){
 		playerTime--;
 		document.querySelector("#timeEl").textContent = playerTime;
 
+		const lifebar = document.querySelector(".Lifetime");
+		lifebar.style.width = (playerTime/initialTime) * 76.0 + "vw"
+		
+		if (playerTime < 30){
+			document.documentElement.style.setProperty(
+				'--stripe-col',
+				"#e66465"
+			);
+	}
+	
+
 		if (playerTime === 0 ){
 			finishgame()
 			clearInterval(clocktimer)

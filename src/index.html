@@ -9,6 +9,8 @@
 				:root {
 					--back-grad1: #4b301f;
 					--back-grad2: #163427;
+
+					--stripe-col: #465298;
 	  			}
 
 				body {
@@ -56,6 +58,7 @@
 						margin-bottom: 1rem;
 						bottom: 0;
 						color: white;
+
 				}
 
 				#hud #message {
@@ -130,6 +133,69 @@
 					background-color: transparent;
 				}
 
+				.LifetimeBar{
+					position: absolute;
+					width: 100%;
+					height: 100%;
+					pointer-events: none;
+				}
+				.LifetimeWireframe {
+					background-image: linear-gradient(-45deg, transparent, transparent);
+					border-radius: 20px;
+					position: absolute;
+					width: 90vw;
+					height: 2vh;
+					opacity: 1;
+					left: 10vw;
+					top: 2px;
+					opacity: 0.8;
+					}
+					.Lifetime {
+						/* background-image: linear-gradient(-45deg, red, green);
+						border-radius: 20px;
+						position: absolute;
+						width: 76vw;
+						height: 2vh;
+						right: 12vw;
+						top: 10px;
+						opacity: 1; */
+
+						background: repeating-linear-gradient(
+						45deg,
+						#606dbc,
+						#606dbc 10px,
+						var(--stripe-col) 10px,
+						var(--stripe-col) 20px
+					);
+						position: absolute;
+						width: 76vw;
+						height: 2vh;
+						right: 12vw;
+						top: 10px;
+						opacity: 1; 
+						
+						border-radius: 12px;
+						transition: width 0.75s linear;
+					}
+					#timeEl{
+						color: white;
+						font-size: 1.5rem;
+						position: absolute;
+						top: 2px;
+						right: 8px;
+						text-align: right;
+					}
+					#points{
+						color: white;
+						font-size: 1.5rem;
+						position: absolute;
+						top: 2px;
+						left: 8px;
+						text-align: left;
+					}
+
+
+
 		</style>
 </head>
 
@@ -153,11 +219,17 @@
 	
 	<div id="gamepage" class="hidden">
 		<div id="hud">
-			<div class="content">
+			<!-- <div class="content">
 				<span>time left:</span>
 				<span id="timeEl">0</span>
-
-			</div>
+				
+			</div> -->
+			<div id = "timeEl">120</div>
+			<div class="LifetimeBar">
+					<div class="LifetimeWireframe"></div>
+					<div class="Lifetime"></div>
+				</div>
+				<div id = "points">000</div>
 			<div id="message" class="hidden"></div>
 		</div>
 	</div>
