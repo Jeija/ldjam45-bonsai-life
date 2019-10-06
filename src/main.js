@@ -13,7 +13,7 @@ import tutule from "../assets/tutule_morph.gltf";
 const OVERLAP = 0.3;
 const SPAWNTIME = 0.6;
 const NUTRIENTS_PER_SECOND = 0.8;
-const TUTULES_PER_SECOND = 0.8;
+const TUTULES_PER_SECOND = 0.2;
 const MAXRADIUS = 2.3;
 const CAMERA_DISTANCE = 4;
 const GRAVITY = new THREE.Vector3(0, -10, 0);
@@ -194,7 +194,11 @@ class Tutule {
 			if (collisionTarget) {
 				this.markedForRemoval = true;
 				if (collisionTarget.detachFromParent()) {
-					looseBranches.push(new LooseBranch(collisionTarget.mesh, this.velocity));
+					let branchVelocity = this.velocity
+						.clone()
+						.multiplyScalar(1.2)
+						.add(new THREE.Vector3(0, 0, 3));
+					looseBranches.push(new LooseBranch(collisionTarget.mesh, branchVelocity));
 				}
 			}
 
