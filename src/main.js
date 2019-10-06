@@ -1,11 +1,19 @@
 import * as THREE from "three";
 import * as fx from 'wafxr';
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
+
 import seed from "../assets/seed.png";
 import leaves from "../assets/plant_texture.png";
+import tutule from "../assets/tutule_morph.gltf";
+//import tutuleArms from "../assets/tutuleArms.fbx";
+//import tutuleKopf from "../assets/tutuleKopf.fbx";
+
 
 const OVERLAP = 0.3;
 const SPAWNTIME = 0.6;
 const NUTRIENTS_PER_SECOND = 0.5;
+const TUTULES_PER_SECOND = 1.0;
 const MAXRADIUS = 2.3;
 const CAMERA_DISTANCE = 4;
 
@@ -13,10 +21,13 @@ let renderer;
 let scene;
 let camera;
 
-let clock = new THREE.Clock();
+const clock = new THREE.Clock();
+const gltfloader = new GLTFLoader();
+const fbxloader = new FBXLoader();
 
 let plant;
 let nutrients = [];
+let tutules = [];
 
 
 const soundArray = {
@@ -67,8 +78,8 @@ class Plant {
 		this.seed.mesh.rotateOnWorldAxis(zaxis, z);
 	}
 
-	checkCollision(nutrient) {
-		return this.seed.checkCollision(nutrient);
+	checkCollision(foreignBody) {
+		return this.seed.checkCollision(foreignBody);
 	}
 
 	step(dtime) {
@@ -102,8 +113,73 @@ class Nutrient {
 
 	step(dtime) {
 		this.mesh.position.add(this.velocity.clone().multiplyScalar(dtime));
-		if (plant.checkCollision(this))
+		let collisionTarget = plant.checkCollision(this);
+		if (collisionTarget) {
 			this.markedForRemoval = true;
+			collisionTarget.spawnChild(this.mesh.position);
+		}
+	}
+}
+
+class Tutule {
+	constructor(position, velocity, angularVelocity) {
+		this.velocity = velocity;
+		this.radius = 0.4;
+		this.addToScene(position);
+		this.markedForRemoval = false;
+		this.angularVelocity = angularVelocity;
+	}
+
+	addToScene(position) {
+		gltfloader.load(tutule, (gltf) => {
+			this.mesh = gltf.scene;
+			this.mesh.scale.set(0.003, 0.003, 0.003);
+
+			this.animationmixer = new THREE.AnimationMixer(this.mesh);
+			gltf.animations.forEach((clip) => {
+				this.animationmixer.clipAction(clip).play();
+			});
+
+			scene.add(this.mesh);
+			this.mesh.position.copy(position);
+		});
+
+		/*fbxloader.load(tutuleKopf, (fbx) => {
+			this.animationmixer = new THREE.AnimationMixer(fbx);
+			fbx.animations.forEach((clip) => {
+				this.animationmixer.clipAction(clip).play();
+			});
+
+			scene.add(fbx);
+			this.mesh.scale.set(0.003, 0.003, 0.003);
+			this.mesh.position.copy(position);
+		});*/
+
+		/*let geometry = new THREE.SphereGeometry(0.2, 10, 10);
+		let material = new THREE.MeshBasicMaterial({
+			color: 0xffa000,
+			side : THREE.DoubleSide
+		});
+		this.mesh = new THREE.Mesh(geometry, material);
+		this.mesh.scale.set(0.1, 0.1, 0.1);
+		scene.add(this.mesh)*/
+	}
+
+	removeFromScene() {
+		scene.remove(this.mesh)
+	}
+
+	step(dtime) {
+		if (this.mesh) {
+			this.mesh.position.add(this.velocity.clone().multiplyScalar(dtime));
+			this.mesh.rotateOnAxis(this.angularVelocity.clone().normalize(), this.angularVelocity.length());
+
+			if (plant.checkCollision(this)) {
+				this.markedForRemoval = true;
+			}
+
+			this.animationmixer.update(dtime);
+		}
 	}
 }
 
@@ -138,17 +214,16 @@ class BodySphere {
 			scene.add(this.mesh);
 	}
 
-	checkCollision(nutrient) {
+	checkCollision(foreignBody) {
 		scene.updateMatrixWorld();
-		let distance = nutrient.mesh.position.distanceTo(this.mesh.getWorldPosition(new THREE.Vector3()));
-		if (distance < (nutrient.radius + this.radius) * (1 - OVERLAP) * this.mesh.scale.x) {
-			this.spawnChild(nutrient.mesh.position);
-			return true;
+		let distance = foreignBody.mesh.position.distanceTo(this.mesh.getWorldPosition(new THREE.Vector3()));
+		if (distance < (foreignBody.radius + this.radius) * (1 - OVERLAP) * this.mesh.scale.x) {
+			return this;
 		}
 
 		for (let i = 0; i < this.children.length; i++) {
-			if (this.children[i].checkCollision(nutrient))
-				return true;
+			if (this.children[i].checkCollision(foreignBody))
+				return this;
 		}
 
 		return false;
@@ -190,7 +265,6 @@ function init() {
 	camera.position.z = CAMERA_DISTANCE;
 
 	scene = new THREE.Scene();
-
 	plant = new Plant();
 
 	renderer = new THREE.WebGLRenderer({
@@ -215,7 +289,6 @@ function displaymessage(message, timeout) {
 	}, timeout);
 }
 
-
 function setRandomBackground() {
 	let innerColor = gradientArray[Math.floor(Math.random() * gradientArray.length)];
 	let outerColor = gradientArray[Math.floor(Math.random() * gradientArray.length)];
@@ -233,13 +306,12 @@ function setRandomBackground() {
 	scene.fog = new THREE.Fog(new THREE.Color(innerColor), CAMERA_DISTANCE, CAMERA_DISTANCE * 1.03);
 }
 
-
 function playSound(opt) {
 	fx.play(opt)
 }
 
 function spawnRandomNutrient(dist, speed, axis, size) {
-	let spawnVec = new THREE.Vector3(dist, 0, 0)
+	let spawnVec = new THREE.Vector3(dist, 0, 0);
 
 	spawnVec.x = dist;
 	spawnVec.applyAxisAngle(axis, Math.random() * 2 * Math.PI);
@@ -251,6 +323,26 @@ function spawnRandomNutrient(dist, speed, axis, size) {
 		.multiplyScalar(speed);
 
 	nutrients.push(new Nutrient(spawnVec, toCenter, size));
+}
+
+function spawnRandomTutule(dist, speed, axis) {
+	let spawnVec = new THREE.Vector3(dist, 0, 0);
+
+	spawnVec.x = dist;
+	spawnVec.applyAxisAngle(axis, Math.random() * 2 * Math.PI);
+
+	let toCenter = spawnVec
+		.clone()
+		.negate()
+		.normalize()
+		.multiplyScalar(speed);
+
+	let angularVelocity = new THREE.Vector3(1, 0, 0)
+		.applyAxisAngle(new THREE.Vector3(1, 0, 0), Math.random() * 2 * Math.PI)
+		.applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.random() * 2 * Math.PI)
+		.multiplyScalar(0.1);
+
+	tutules.push(new Tutule(spawnVec, toCenter, angularVelocity));
 }
 
 function globalStep() {
@@ -267,6 +359,13 @@ function globalStep() {
 		nutrient.step(dtime);
 	}
 
+	/* Execute all tutule step functions */
+	for (let n = 0; n < tutules.length; n++) {
+		let tutule = tutules[n];
+		tutule.step(dtime);
+	}
+
+
 	/* Remove all nutrients that are marked for removal */
 	for (let n = nutrients.length - 1; n >= 0; n--) {
 		if (nutrients[n].markedForRemoval) {
@@ -275,9 +374,22 @@ function globalStep() {
 		}
 	}
 
+	/* Remove all tutules that are marked for removal */
+	for (let n = tutules.length - 1; n >= 0; n--) {
+		if (tutules[n].markedForRemoval) {
+			tutules[n].removeFromScene()
+			tutules.splice(n, 1)
+		}
+	}
+
 	/* Randomly spawn nutrients */
 	if (Math.random() < NUTRIENTS_PER_SECOND * dtime){
-		spawnRandomNutrient(10, 1.5, new THREE.Vector3(0,0,1), 0.2);
+		spawnRandomNutrient(10, 1.5, new THREE.Vector3(0, 0, 1), 0.2);
+	}
+
+	/* Randomly spawn tutules */
+	if (Math.random() < TUTULES_PER_SECOND * dtime){
+		spawnRandomTutule(10, 1.5, new THREE.Vector3(0, 0, 1));
 	}
 
 	/* TODO: Randomly display messages */
