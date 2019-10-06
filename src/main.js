@@ -239,7 +239,7 @@ class Tutule {
 		objloader.load(tutule, obj => {
 			this.mesh = obj
 			this.mesh.scale.set(0.003, 0.003, 0.003)
-	
+
 			this.mesh.traverse(function(child) {
 				if (child instanceof THREE.Mesh) {
 					child.material = new THREE.ShaderMaterial({
@@ -253,7 +253,7 @@ class Tutule {
 					});
 				}
 			});
-	
+
 			scene.add(this.mesh)
 			this.mesh.position.copy(position)
 		});
@@ -425,7 +425,7 @@ class Flower {
 		this.hasFruit = false;
 		this.fruitmesh = null;
 		this.fruitAge = 0;
-		
+
 	}
 
 	addToScene() {
@@ -572,7 +572,7 @@ class Flower {
 				FRUIT_MAXSCALE;
 			this.fruitmesh.scale.set(size, size, size);
 		}
-		
+
 
 		if (this.hasFruit) {
 			this.fruitmesh.rotateY(Math.PI * dtime);
@@ -812,12 +812,12 @@ function globalStep() {
 
 	/* Randomly spawn nutrients */
 	if (gamePhase === PHASE.GROW && Math.random() < NUTRIENTS_PER_SECOND * dtime){
-		spawnRandomNutrient(10, 1.5, new THREE.Vector3(0, 0, 1), 0.2);
+		spawnRandomNutrient(7, 1.5, new THREE.Vector3(0, 0, 1), 0.2);
 	}
 
 	/* Randomly spawn tutules */
 	if (gamePhase === PHASE.FIGHT && Math.random() < TUTULES_PER_SECOND * dtime){
-		spawnRandomTutule(10, 1.5, new THREE.Vector3(0, 0, 1));
+		spawnRandomTutule(7, 1.5, new THREE.Vector3(0, 0, 1));
 	}
 
 	gameTime -= dtime;
@@ -844,16 +844,14 @@ function globalStep() {
 	}
 
 
-	let decider = Math.round(globaleGameTime/15);
-	decider = decider % 3;
+	/* Grow / Fight Logic */
+	let decider = Math.round(globaleGameTime / 10);
+	decider = decider % 5;
 
-	if (decider === 2 && gamePhase !== PHASE.FIGHT)
+	if (decider >= 3 && gamePhase !== PHASE.FIGHT)
 		enterFightPhase();
-	else if (decider === 0 && gamePhase !== PHASE.GROW)
+	else if (decider < 3 && gamePhase !== PHASE.GROW)
 		enterGrowPhase();
-	
-
-	
 
 	if (gameTime <= 0) {
 		finishgame()
