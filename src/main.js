@@ -18,6 +18,9 @@ let clock = new THREE.Clock();
 let plant;
 let nutrients = [];
 
+const initialTime = 120;
+let playerTime = initialTime;
+
 
 const soundArray = {
 	changeNightDay: {
@@ -51,6 +54,8 @@ const soundArray = {
 };
 
 const gradientArray = ['#4b301f', '#163427', '#e66465', '#9198e5'];
+
+document.getElementById('startbutton').onclick = startgame;
 
 class Plant {
 	constructor() {
@@ -144,7 +149,7 @@ class BodySphere {
 		if (distance < (nutrient.radius + this.radius - OVERLAP) * this.mesh.scale.x) {
 			this.spawnChild(nutrient.mesh.position);
 			playSound(soundArray.addNutrient);
-			displaymessage( "+10", 1000);
+			displaymessage( "+10", 1500);
 			return true;
 		}
 
@@ -187,8 +192,36 @@ class BodySphere {
 
 window.addEventListener("resize", onWindowResize, false);
 
-init();
-globalStep();
+function startgame(){
+
+
+	playerTime = initialTime;
+	document.querySelector("#startpage").style.display = "none";
+	document.querySelector("#gamepage").classList.remove('hidden');
+	document.querySelector("#gamepage").classList.add('visible');
+
+
+	const clocktimer = setInterval( () => {
+		playerTime--;
+		document.querySelector("#timeEl").textContent = playerTime;
+
+		if (playerTime === 0 ){
+			finishgame()
+			clearInterval(clocktimer)
+		}
+	}, 1000)
+
+
+	init();
+	globalStep();
+}
+
+function finishgame(){
+	
+	document.querySelector("#startpage").style.display = "block";
+	document.querySelector("#gamepage").classList.add('hidden');
+	document.querySelector("#gamepage").classList.remove('visible');
+}
 
 function init() {
 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
@@ -205,6 +238,7 @@ function init() {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 
 	document.body.appendChild(renderer.domElement);
+	addListeners();
 }
 
 function displaymessage(message, timeout) {
@@ -305,6 +339,7 @@ function onWindowResize() {
 }
 
 
+function addListeners(){
 /**** Mouse + Touch Control ****/
 let mouseDown = false;
 let touchtrack = {x: 0, y: 0};
@@ -334,4 +369,4 @@ renderer.domElement.addEventListener("mouseup", function() {
 renderer.domElement.addEventListener("touchdown", function() {
 	touchtrack.x = event.touches[0].clientX;
 	touchtrack.y = event.touches[0].clientY;
-});
+});}
