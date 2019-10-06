@@ -478,11 +478,22 @@ function onWindowResize() {
 }
 
 
-/**** Mouse Control ****/
+/**** Mouse + Touch Control ****/
 let mouseDown = false;
+let touchtrack = {x: 0, y: 0};
 renderer.domElement.addEventListener("mousemove", function() {
 	if (mouseDown)
 		plant.rotate(event.movementY * 0.005, event.movementX * 0.005, 0);
+});
+
+renderer.domElement.addEventListener("touchmove", function() {
+
+		const movX = event.touches[0].clientX - touchtrack.x
+		const movY = event.touches[0].clientY - touchtrack.y
+		plant.rotate(movY * 0.01, movX * 0.01, 0);
+		
+		touchtrack.x = event.touches[0].clientX
+		touchtrack.y = event.touches[0].clientY
 });
 
 renderer.domElement.addEventListener("mousedown", function() {
@@ -491,4 +502,9 @@ renderer.domElement.addEventListener("mousedown", function() {
 
 renderer.domElement.addEventListener("mouseup", function() {
 	mouseDown = false;
+});
+
+renderer.domElement.addEventListener("touchdown", function() {
+	touchtrack.x = event.touches[0].clientX;
+	touchtrack.y = event.touches[0].clientY;
 });
