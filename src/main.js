@@ -73,6 +73,7 @@ let tutules;
 let looseBranches;
 let risingFruits;
 let gameTime;
+let globaleGameTime;
 let gamePhase;
 
 let gameRunning = false;
@@ -637,6 +638,7 @@ function initGame() {
 	looseBranches = [];
 	risingFruits = [];
 	gameTime = INITIAL_TIME;
+	globaleGameTime = 0;
 	gamePhase = PHASE.GROW;
 	gameRunning = true;
 	plant = new Plant();
@@ -812,6 +814,8 @@ function globalStep() {
 	}
 
 	gameTime -= dtime;
+	globaleGameTime += dtime;
+
 	document.querySelector("#timeEl").textContent = gameTime.toFixed(1) + "s";
 
 	renderer.render(scene, camera);
@@ -832,20 +836,17 @@ function globalStep() {
 		);
 	}
 
-	if (gameTime < INITIAL_TIME-60 && !gamePhase === PHASE.FIGHT)
-		enterFightPhase()
-	if (gameTime < INITIAL_TIME-(60+10) && !gamePhase === PHASE.GROW)
-		enterGrowPhase()
-	if (gameTime < INITIAL_TIME-(60+10+55) && !gamePhase === PHASE.FIGHT)
-		enterFightPhase()
-	if (gameTime < INITIAL_TIME-(60+10+55+10) && !gamePhase === PHASE.GROW)
-		enterGrowPhase()
-	if (gameTime < INITIAL_TIME-(60+10+55+10+50) && !gamePhase === PHASE.FIGHT)
-		enterFightPhase()
-	if (gameTime < INITIAL_TIME-(60+10+55+10+50+10) && !gamePhase === PHASE.GROW)
-		enterGrowPhase()
-	if (gameTime < INITIAL_TIME-(60+10+55+10+50+10+45) && !gamePhase === PHASE.FIGHT)
-		enterFightPhase()
+
+	let decider = Math.round(globaleGameTime/15);
+	decider = decider % 3;
+
+	if (decider === 2 && gamePhase !== PHASE.FIGHT)
+		enterFightPhase();
+	else if (decider === 0 && gamePhase !== PHASE.GROW)
+		enterGrowPhase();
+	
+
+	
 
 	if (gameTime <= 0) {
 		finishgame()
