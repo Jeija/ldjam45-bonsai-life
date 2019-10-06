@@ -751,6 +751,22 @@ function globalStep() {
 
 	renderer.render(scene, camera);
 
+	/* Handle remaining game time */
+	const lifebar = document.querySelector(".Lifetime");
+	lifebar.style.width = (gameTime / INITIAL_TIME) * 76.0 + "vw";
+
+	if (gameTime < 30){
+		document.documentElement.style.setProperty(
+			'--stripe-col',
+			"#e66465"
+		);
+	} else {
+		document.documentElement.style.setProperty(
+			'--stripe-col',
+			"#465298"
+		);
+	}
+
 	if (gameTime <= 0) {
 		finishgame()
 	}
