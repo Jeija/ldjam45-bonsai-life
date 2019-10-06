@@ -2,11 +2,38 @@ import * as THREE from "three";
 import * as fx from 'wafxr';
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 
-import seed from "../assets/seed.png";
-import leaves from "../assets/plant_texture.png";
+import seed from "../assets/seed_texture.png";
+import seed_map from "../assets/seed_map.png";
+import seed_shiny from "../assets/seed_shiny.png";
+
+import leaves_1 from "../assets/plant_1_texture.png";
+import leaves_1_map from "../assets/plant_1_map.png";
+import leaves_1_shiny from "../assets/plant_1_shiny.png";
+
+import leaves_2 from "../assets/plant_2_texture.png";
+import leaves_2_map from "../assets/plant_2_map.png";
+import leaves_2_shiny from "../assets/plant_2_shiny.png";
+
+import leaves_3 from "../assets/plant_3_texture.png";
+import leaves_3_map from "../assets/plant_3_map.png";
+import leaves_3_shiny from "../assets/plant_3_shiny.png";
+
+import leaves_4 from "../assets/plant_4_texture.png";
+import leaves_4_map from "../assets/plant_4_map.png";
+import leaves_4_shiny from "../assets/plant_4_shiny.png";
+
+var leaves_0_array = [seed, seed_map, seed_shiny];
+var leaves_1_array = [leaves_1, leaves_1_map, leaves_1_shiny];
+var leaves_2_array = [leaves_2, leaves_2_map, leaves_2_shiny];
+var leaves_3_array = [leaves_3, leaves_3_map, leaves_3_shiny];
+var leaves_4_array = [leaves_4, leaves_4_map, leaves_4_shiny];
+var leavesArray = [leaves_1_array, leaves_2_array,leaves_3_array,leaves_4_array];
+
 import tutule from "../assets/tutule.obj";
 import flowerFruit from "../assets/FlowerFruit.obj";
 import flowerPetals from "../assets/FlowerPetals.obj";
+
+
 
 const OVERLAP = 0.3;
 const SPAWNTIME = 0.6;
@@ -67,7 +94,7 @@ const soundArray = {
 
 class Plant {
 	constructor() {
-		this.seed = new BodySphere(new THREE.Vector3(0, 0, 0), 0.8, null)
+		this.seed = new BodySphere(new THREE.Vector3(0, 0, 0), 0.8, null);
 	}
 
 	rotate(x, y, z) {
@@ -229,18 +256,41 @@ class BodySphere {
 
 	addToScene() {
 		let geometry = new THREE.SphereGeometry(this.radius, 50 * this.radius, 50 * this.radius);
-		let material = new THREE.MeshBasicMaterial({
-			map : new THREE.TextureLoader().load(seed),
-			side : THREE.DoubleSide,
-			transparent : true
-		});
+		const rndIdx = Math.floor(Math.random()*leavesArray.length)
+
+		let material = null;
+		if (this.parent === null) {
+			material = new THREE.MeshPhongMaterial({
+				map : new THREE.TextureLoader().load(leaves_0_array[0]),
+				bumpMap: new THREE.TextureLoader().load(leaves_0_array[1]),
+
+				bumpScale: 0.5,
+				side : THREE.DoubleSide,
+				transparent : true,
+
+				specularMap : THREE.ImageUtils.loadTexture(leaves_0_array[2]),
+				specular : new THREE.Color(0x55855e)
+			});
+		} else {
+			material = new THREE.MeshPhongMaterial({
+				map : new THREE.TextureLoader().load(leavesArray[rndIdx][0]),
+				bumpMap: new THREE.TextureLoader().load(leavesArray[rndIdx][1]),
+
+				bumpScale: 0.5,
+				side : THREE.DoubleSide,
+				transparent : true,
+
+				specularMap : THREE.ImageUtils.loadTexture(leavesArray[rndIdx][2]),
+				specular : new THREE.Color(0x55855e)
+			});
+		}
+
 		this.mesh = new THREE.Mesh(geometry, material);
 
 		if (this.parent !== null)
 			this.parent.mesh.add(this.mesh);
 		else
-			scene.add(this.mesh);
-	}
+			scene.add(this.mesh);	}
 
 	checkCollision(foreignBody) {
 		scene.updateMatrixWorld();
@@ -279,7 +329,7 @@ class BodySphere {
 		let radius = (MAXRADIUS - distanceFromOrigin) * 0.3;
 
 		let child;
-		if (this.depth >= 1) {
+		if (this.depth >= 4) {
 			child = new Flower(this.mesh.worldToLocal(position), radius, this);
 		} else {
 			child = new BodySphere(this.mesh.worldToLocal(position), radius, this);
@@ -326,9 +376,16 @@ class Flower {
 	addToScene() {
 		/* Sphere */
 		let geometry = new THREE.SphereGeometry(this.radius, 100 * this.radius, 100 * this.radius);
-		let material = new THREE.MeshBasicMaterial({
-			color : 0xffff00,
-			side : THREE.DoubleSide
+		let material = new THREE.MeshPhongMaterial({
+			map : new THREE.TextureLoader().load(leaves_4_array[0]),
+			bumpMap: new THREE.TextureLoader().load(leaves_4_array[1]),
+
+			bumpScale: 0.5,
+			side : THREE.DoubleSide,
+			transparent : true,
+
+			specularMap : THREE.ImageUtils.loadTexture(leaves_4_array[2]),
+			specular : new THREE.Color(0x55855e)
 		});
 		this.mesh = new THREE.Mesh(geometry, material);
 
@@ -364,7 +421,7 @@ class Flower {
 				side : THREE.DoubleSide
 			});
 			this.fruitmesh = new THREE.Mesh(geometry, material);*/
-	
+
 			this.mesh.add(this.fruitmesh);
 			this.fruitmesh.lookAt(new THREE.Vector3().multiplyScalar(2));
 			this.fruitmesh.rotateX(Math.PI / 2);
@@ -462,6 +519,25 @@ function initGame() {
 	});
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
+
+	/* Initialize light */
+	scene.add(new THREE.AmbientLight(0x888888));
+
+	let dirLight = new THREE.DirectionalLight('white', 1);
+	dirLight.position.set(15, 15, 15);
+	dirLight.target.position.set(10, 10, 10);
+	dirLight.castShadow = true;
+
+	// Set up shadow properties for the light
+	dirLight.shadow.mapSize.width = 512;  // default
+	dirLight.shadow.mapSize.height = 512; // default
+	dirLight.shadow.camera.near = 0.5;    // default
+	dirLight.shadow.camera.far = 500;     // default
+	scene.add(dirLight);
+
+	let light = new THREE.DirectionalLight(0xcccccc, 1);
+	light.position.set(5, 3, 5);
+	scene.add(light);
 
 	/* Reset game */
 	nutrients = [];
