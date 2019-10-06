@@ -143,12 +143,17 @@ class BodySphere {
 		let distance = nutrient.mesh.position.distanceTo(this.mesh.getWorldPosition(new THREE.Vector3()));
 		if (distance < (nutrient.radius + this.radius - OVERLAP) * this.mesh.scale.x) {
 			this.spawnChild(nutrient.mesh.position);
+			playSound(soundArray.addNutrient);
+			displaymessage( "+10", 1000);
 			return true;
 		}
 
 		for (let i = 0; i < this.children.length; i++) {
-			if (this.children[i].checkCollision(nutrient))
-				return true;
+			if (this.children[i].checkCollision(nutrient)){
+				playSound(soundArray.addNutrient);
+				displaymessage( "+10", 1000);
+			return true;
+			}
 		}
 
 		return false;
@@ -280,10 +285,10 @@ function globalStep() {
 		spawnRandomNutrient(10, 1.5, new THREE.Vector3(0,0,1), 0.2);
 	}
 
-	/* TODO: Randomly display messages */
-	if (Math.random() < 0.1 * dtime) {
-		displaymessage("a testmessage", 2000);
-	}
+	// /* TODO: Randomly display messages */
+	// if (Math.random() < 0.1 * dtime) {
+	// 	displaymessage("a testmessage", 2000);
+	// }
 
 	renderer.render(scene, camera);
 }
